@@ -1,2 +1,2 @@
 # Official Model Context Protocol Python SDK, v1 FastMCP API.
-mcp[cli]==1.30.0
+mcp[cli]==2.2.0

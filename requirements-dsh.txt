@@ -1,0 +1,2 @@
+# Optional local Agent runtime. The base workbench still runs without DSH.
+deepseek-harness-sdk==0.1.5rc1

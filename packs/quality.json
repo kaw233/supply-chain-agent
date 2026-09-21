@@ -1,0 +1,601 @@
+{
+  "schema_version": "1.0",
+  "id": "quality",
+  "version": 1,
+  "name": "来料质量处置",
+  "subtitle": "INCOMING QUALITY",
+  "description": "降低异常批次流入风险",
+  "template": "quality",
+  "goal": {
+    "label": "降低异常批次流入风险",
+    "target": 95,
+    "unit": "%",
+    "metric_label": "正常批次占比"
+  },
+  "fields": [
+    {
+      "key": "id",
+      "label": "对象编号",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "name",
+      "label": "业务对象",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "owner",
+      "label": "责任人",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "owner_email",
+      "label": "责任人邮箱",
+      "type": "string"
+    },
+    {
+      "key": "site",
+      "label": "工厂",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "supplier",
+      "label": "供应商",
+      "type": "string"
+    },
+    {
+      "key": "sample_qty",
+      "label": "抽检数",
+      "type": "number",
+      "required": true
+    },
+    {
+      "key": "defective",
+      "label": "不良数",
+      "type": "number",
+      "required": true
+    },
+    {
+      "key": "batch_qty",
+      "label": "批次数量",
+      "type": "number",
+      "required": true
+    },
+    {
+      "key": "unit_price",
+      "label": "演示单价",
+      "type": "number",
+      "required": true
+    }
+  ],
+  "mapping": {},
+  "parameters": {
+    "critical_pct": 5,
+    "warning_pct": 2
+  },
+  "derived": [
+    {
+      "key": "reject_pct",
+      "label": "不良率",
+      "expr": "round(defective / max(sample_qty, 1) * 100, 1)"
+    },
+    {
+      "key": "coverage",
+      "label": "抽检合格率",
+      "expr": "round(100 - reject_pct, 1)"
+    },
+    {
+      "key": "impact",
+      "label": "关联批次金额（非损失）",
+      "expr": "batch_qty * unit_price if reject_pct >= warning_pct else 0"
+    }
+  ],
+  "rules": [
+    {
+      "id": "R-Q00",
+      "name": "无有效抽检",
+      "when": "sample_qty <= 0",
+      "severity": "unknown",
+      "reason": "抽检数必须大于 0，当前无法判定质量。"
+    },
+    {
+      "id": "R-Q01",
+      "name": "严重质量异常",
+      "when": "reject_pct >= critical_pct",
+      "severity": "high",
+      "reason": "抽检不良率 {reject_pct}%，达到严重阈值 {critical_pct}%。"
+    },
+    {
+      "id": "R-Q02",
+      "name": "质量关注",
+      "when": "reject_pct >= warning_pct",
+      "severity": "medium",
+      "reason": "抽检不良率 {reject_pct}%，需要质量复核。"
+    },
+    {
+      "id": "R-Q03",
+      "name": "抽检正常",
+      "when": "True",
+      "severity": "normal",
+      "reason": "当前抽检结果未命中异常阈值。"
+    }
+  ],
+  "case": {
+    "key": "id",
+    "title": "{name}",
+    "owner_field": "owner",
+    "close_policy": "normal_after_rerun"
+  },
+  "actions": {
+    "email.send": {
+      "title": "责任人协同邮件",
+      "group_by": "owner_email",
+      "subject": "[{scene}] {owner} 的 {count} 项待处理事项",
+      "body": "{owner}，你好：\n\n以下事项需要跟进：\n{items}\n\n请补充承诺、处理计划或佐证，并在工作台登记反馈。\n场景：{scene}\n本通知为场景模板生成。",
+      "executor": "hermes_skill",
+      "ui": "notification",
+      "name": "协同邮件",
+      "skill_hint": "",
+      "instruction": "使用已安装的邮件发送 Skill 发送已确认的通知。",
+      "recipient_field": "owner_email",
+      "recipient_label": "收件人邮箱"
+    },
+    "feishu.send": {
+      "title": "飞书群协同",
+      "group_by": "owner",
+      "body": "{scene}：本次有 {count} 项需要协同。\n{items}",
+      "executor": "hermes_skill",
+      "ui": "notification",
+      "name": "飞书通知",
+      "skill_hint": "",
+      "instruction": "使用已安装的飞书操作 Skill 发送已确认的通知。",
+      "recipient_field": "feishu_target",
+      "recipient_label": "飞书目标（群或用户标识）"
+    },
+    "feishu.read": {
+      "name": "飞书查证",
+      "executor": "hermes_skill",
+      "ui": "query",
+      "skill_hint": "",
+      "instruction": "使用已安装的飞书读取 Skill 查询指定业务对象的相关协同记录。返回原文摘要、来源和时间；缺少 Skill 或访问权限时明确说明。不要使用本地演示消息。"
+    }
+  },
+  "triggers": {
+    "data_ready": true,
+    "manual": true,
+    "agent": true,
+    "auto_prepare": false,
+    "auto_capability": "email.send"
+  },
+  "layout": [
+    "goals",
+    "pipeline",
+    "trend",
+    "distribution",
+    "workload",
+    "table",
+    "activity"
+  ],
+  "acceptance": [
+    {
+      "name": "不良率 8% → 高风险",
+      "record": {
+        "id": "Q1",
+        "name": "抽检测试",
+        "owner": "测试员",
+        "site": "工厂",
+        "sample_qty": 100,
+        "defective": 8,
+        "batch_qty": 500,
+        "unit_price": 20
+      },
+      "expected": {
+        "severity": "high",
+        "reject_pct": 8
+      }
+    },
+    {
+      "name": "零抽检 → 未知",
+      "record": {
+        "id": "Q2",
+        "name": "抽检测试",
+        "owner": "测试员",
+        "site": "工厂",
+        "sample_qty": 0,
+        "defective": 0,
+        "batch_qty": 500,
+        "unit_price": 20
+      },
+      "expected": {
+        "severity": "unknown"
+      }
+    }
+  ],
+  "demo_records": [
+    {
+      "id": "LOT-6701",
+      "name": "伺服驱动模组",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "苏州工厂",
+      "supplier": "华芯精密",
+      "sample_qty": 100,
+      "defective": 0,
+      "batch_qty": 1000,
+      "unit_price": 12
+    },
+    {
+      "id": "LOT-6702",
+      "name": "工业控制主板",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "东莞工厂",
+      "supplier": "远峰机电",
+      "sample_qty": 100,
+      "defective": 1,
+      "batch_qty": 1000,
+      "unit_price": 12
+    },
+    {
+      "id": "LOT-6703",
+      "name": "精密减速器",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "武汉工厂",
+      "supplier": "东立电子",
+      "sample_qty": 200,
+      "defective": 3,
+      "batch_qty": 500,
+      "unit_price": 48
+    },
+    {
+      "id": "LOT-6704",
+      "name": "线性导轨组件",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "苏州工厂",
+      "supplier": "恒泰工业",
+      "sample_qty": 100,
+      "defective": 8,
+      "batch_qty": 1000,
+      "unit_price": 12
+    },
+    {
+      "id": "LOT-6705",
+      "name": "光学传感单元",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "东莞工厂",
+      "supplier": "华芯精密",
+      "sample_qty": 100,
+      "defective": 0,
+      "batch_qty": 2000,
+      "unit_price": 36
+    },
+    {
+      "id": "LOT-6706",
+      "name": "电源转换模块",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "武汉工厂",
+      "supplier": "远峰机电",
+      "sample_qty": 200,
+      "defective": 2,
+      "batch_qty": 500,
+      "unit_price": 36
+    },
+    {
+      "id": "LOT-6707",
+      "name": "耐压接插件",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "苏州工厂",
+      "supplier": "东立电子",
+      "sample_qty": 100,
+      "defective": 12,
+      "batch_qty": 1000,
+      "unit_price": 36
+    },
+    {
+      "id": "LOT-6708",
+      "name": "铝合金壳体",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "东莞工厂",
+      "supplier": "恒泰工业",
+      "sample_qty": 200,
+      "defective": 0,
+      "batch_qty": 2000,
+      "unit_price": 48
+    },
+    {
+      "id": "LOT-6709",
+      "name": "高频滤波器",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "武汉工厂",
+      "supplier": "华芯精密",
+      "sample_qty": 0,
+      "defective": 1,
+      "batch_qty": 500,
+      "unit_price": 36
+    },
+    {
+      "id": "LOT-6710",
+      "name": "控制线束总成",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "苏州工厂",
+      "supplier": "远峰机电",
+      "sample_qty": 200,
+      "defective": 3,
+      "batch_qty": 1000,
+      "unit_price": 12
+    },
+    {
+      "id": "LOT-6711",
+      "name": "液压阀体",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "东莞工厂",
+      "supplier": "东立电子",
+      "sample_qty": 200,
+      "defective": 8,
+      "batch_qty": 2000,
+      "unit_price": 36
+    },
+    {
+      "id": "LOT-6712",
+      "name": "绝缘密封圈",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "武汉工厂",
+      "supplier": "恒泰工业",
+      "sample_qty": 200,
+      "defective": 0,
+      "batch_qty": 500,
+      "unit_price": 36
+    },
+    {
+      "id": "LOT-6713",
+      "name": "伺服驱动模组",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "苏州工厂",
+      "supplier": "华芯精密",
+      "sample_qty": 200,
+      "defective": 2,
+      "batch_qty": 2000,
+      "unit_price": 12
+    },
+    {
+      "id": "LOT-6714",
+      "name": "工业控制主板",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "东莞工厂",
+      "supplier": "远峰机电",
+      "sample_qty": 100,
+      "defective": 12,
+      "batch_qty": 500,
+      "unit_price": 12
+    },
+    {
+      "id": "LOT-6715",
+      "name": "精密减速器",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "武汉工厂",
+      "supplier": "东立电子",
+      "sample_qty": 100,
+      "defective": 0,
+      "batch_qty": 2000,
+      "unit_price": 36
+    },
+    {
+      "id": "LOT-6716",
+      "name": "线性导轨组件",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "苏州工厂",
+      "supplier": "恒泰工业",
+      "sample_qty": 100,
+      "defective": 1,
+      "batch_qty": 1000,
+      "unit_price": 48
+    },
+    {
+      "id": "LOT-6717",
+      "name": "光学传感单元",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "东莞工厂",
+      "supplier": "华芯精密",
+      "sample_qty": 100,
+      "defective": 3,
+      "batch_qty": 2000,
+      "unit_price": 48
+    },
+    {
+      "id": "LOT-6718",
+      "name": "电源转换模块",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "武汉工厂",
+      "supplier": "远峰机电",
+      "sample_qty": 200,
+      "defective": 8,
+      "batch_qty": 1000,
+      "unit_price": 48
+    },
+    {
+      "id": "LOT-6719",
+      "name": "耐压接插件",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "苏州工厂",
+      "supplier": "东立电子",
+      "sample_qty": 100,
+      "defective": 0,
+      "batch_qty": 2000,
+      "unit_price": 36
+    },
+    {
+      "id": "LOT-6720",
+      "name": "铝合金壳体",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "东莞工厂",
+      "supplier": "恒泰工业",
+      "sample_qty": 100,
+      "defective": 2,
+      "batch_qty": 500,
+      "unit_price": 12
+    },
+    {
+      "id": "LOT-6721",
+      "name": "高频滤波器",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "武汉工厂",
+      "supplier": "华芯精密",
+      "sample_qty": 200,
+      "defective": 12,
+      "batch_qty": 500,
+      "unit_price": 48
+    },
+    {
+      "id": "LOT-6722",
+      "name": "控制线束总成",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "苏州工厂",
+      "supplier": "远峰机电",
+      "sample_qty": 200,
+      "defective": 0,
+      "batch_qty": 500,
+      "unit_price": 48
+    },
+    {
+      "id": "LOT-6723",
+      "name": "液压阀体",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "东莞工厂",
+      "supplier": "东立电子",
+      "sample_qty": 100,
+      "defective": 1,
+      "batch_qty": 1000,
+      "unit_price": 36
+    },
+    {
+      "id": "LOT-6724",
+      "name": "绝缘密封圈",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "武汉工厂",
+      "supplier": "恒泰工业",
+      "sample_qty": 100,
+      "defective": 3,
+      "batch_qty": 500,
+      "unit_price": 36
+    },
+    {
+      "id": "LOT-6725",
+      "name": "伺服驱动模组",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "苏州工厂",
+      "supplier": "华芯精密",
+      "sample_qty": 200,
+      "defective": 8,
+      "batch_qty": 2000,
+      "unit_price": 36
+    },
+    {
+      "id": "LOT-6726",
+      "name": "工业控制主板",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "东莞工厂",
+      "supplier": "远峰机电",
+      "sample_qty": 200,
+      "defective": 0,
+      "batch_qty": 1000,
+      "unit_price": 48
+    },
+    {
+      "id": "LOT-6727",
+      "name": "精密减速器",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "武汉工厂",
+      "supplier": "东立电子",
+      "sample_qty": 100,
+      "defective": 2,
+      "batch_qty": 2000,
+      "unit_price": 12
+    },
+    {
+      "id": "LOT-6728",
+      "name": "线性导轨组件",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "苏州工厂",
+      "supplier": "恒泰工业",
+      "sample_qty": 100,
+      "defective": 12,
+      "batch_qty": 1000,
+      "unit_price": 36
+    }
+  ],
+  "data_note": "内置合成演示数据，不代表真实企业业务。",
+  "agent_context": "围绕当前场景的数据和证据解释问题。使用平台动作草案，不声称已经发出通知。",
+  "columns": [
+    {
+      "key": "id",
+      "label": "批次编号",
+      "format": "text"
+    },
+    {
+      "key": "name",
+      "label": "来料名称",
+      "format": "text"
+    },
+    {
+      "key": "owner",
+      "label": "责任人",
+      "format": "text"
+    },
+    {
+      "key": "sample_qty",
+      "label": "抽检",
+      "format": "number"
+    },
+    {
+      "key": "defective",
+      "label": "不良",
+      "format": "number"
+    },
+    {
+      "key": "reject_pct",
+      "label": "不良率",
+      "format": "percent"
+    },
+    {
+      "key": "batch_qty",
+      "label": "批次",
+      "format": "number"
+    },
+    {
+      "key": "supplier",
+      "label": "供应商",
+      "format": "text"
+    }
+  ],
+  "impact_label": "关联批次金额（非损失）"
+}

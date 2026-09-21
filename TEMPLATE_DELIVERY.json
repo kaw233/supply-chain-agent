@@ -1,0 +1,21 @@
+{
+  "kind": "complete-standalone-business-source",
+  "version": "2.2.0-rag",
+  "generator_version": "0.9.0",
+  "platform_required": false,
+  "old_archive_required": false,
+  "Docker_required": false,
+  "Git_required": false,
+  "DSH_required": false,
+  "default_dependencies": "Python >=3.10 standard library + SQLite",
+  "default_scenarios": [
+    "materials",
+    "delivery",
+    "quality"
+  ],
+  "entry": "python server.py --open",
+  "doctor": "python doctor.py",
+  "verify": "python verify.py",
+  "external_business_executor": "employee Hermes API or WebUI with installed Skills",
+  "live_hermes_verified": false
+}

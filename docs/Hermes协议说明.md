@@ -1,0 +1,78 @@
+# Hermes 接入、状态与批准协议
+
+版本 1.2 · 核查日期 2026-09-10。本说明记录使用的公开协议和本模板处理方式，不保证任意 fork/旧版/未来版本无修改兼容。未使用真实用户服务凭据；测试使用项目内明确标识的协议测试对端。
+
+## 1. 两个适配器，不是两个产品模式
+
+右侧始终是同一业务助手。AgentService 保存任务与关联，适配器仅完成认证、提交、读状态、收事件、停止及回复批准。Python 不重演远端工具事件。普通对话直接使用 Hermes 工具/Skills，邮件、飞书操作也如此。
+
+| 功能 | Hermes 原生 API | nesquena/hermes-webui |
+|---|---|---|
+| 认证 | Authorization: Bearer | 密码登录 + Cookie；读取网页 csrfToken 后发送 X-Hermes-CSRF-Token |
+| 新任务 | POST /v1/runs，input、可选 session_id | POST /api/chat/start，session_id、message |
+| 会话 | 原生返回的 session_id 后续关联 | /api/sessions、/api/session、新建 /api/session/new |
+| 状态 | GET /v1/runs/{run_id} | GET /api/chat/stream/status?stream_id=… |
+| 事件 | GET /v1/runs/{run_id}/events | GET /api/chat/stream，replay 和 after_event_id/Last-Event-ID |
+| 停止 | POST /v1/runs/{run_id}/stop | GET /api/chat/cancel?stream_id=… |
+| 批准 | POST /v1/runs/{run_id}/approval，choice + request_id | /api/approval/pending、/api/approval/respond，approval_id；镜像请求另带 run_id、mirror_token |
+| 补充信息 | 原生 Runs 当前适配未声明独立 clarify 通道；普通问题在下一轮回答 | /api/clarify/pending、/api/clarify/respond，clarify_id + response |
+
+当前默认使用 WebUI；原生 API 可在设置切换。API 不强制选用某个语言模型，默认沿用 Hermes 自身配置。WebUI 可在高级设置填写 profile、workspace 或 model，空值沿用原端。
+
+工作台不改变远端现有工具集合。模板提示词要求不派发子代理，但不声称构建了一个能约束所有外部 Skill 的沙箱。
+
+## 2. 已接受与已完成分开
+
+创建任务先保存本地 request_id、context、连接快照和操作人，再在后台提交。取得 run_id / stream_id 后立即保存。浏览器永远不直接持有远端任务执行循环。
+
+原生 Runs 附带 Idempotency-Key；WebUI 不冒充具有同样幂等保证。所有路径发生提交结果不明时，本模板都不自动重新 POST。只读状态可再次请求。
+
+SSE 是及时更新途径，不是唯一权威。后台同时查询执行状态。SSE 丢失终态时，用状态查询补齐；远端没有记录时保留“结果待核实”。已完成/取消/失败/中断的本地执行，不被迟到 running 或旧批准事件重新打开。
+
+原生事件缓冲、运行记录及 WebUI 日志均有各自保留行为，不承诺保留所有中间片段。缺日志不代表业务失败；缺结果也不能被总结文本补成“成功”。本地已收到的记录仍保存在 SQLite。
+
+## 3. 停止与重启
+
+停止先写 stop_requested，阻止本任务后续桥接写操作，再向远端发停止请求。受理不等于停止完成；继续核对，直到远端终态或明确结果待核实。远端若拒绝或无法联通，显示原因，不伪报取消成功。
+
+本轮不做子代理树、任意后台进程追杀或暂停检查点。已经发送的邮件、独立后台脚本、脱离当前会话的外部任务可能不能撤回。只有上游支持且能够归属到本次运行的停止能力，才纳入声明。
+
+浏览器刷新、新开标签页只查原任务，不 POST start。Python 后端重启后，对有远端编号的记录仅重新观察；无编号但提交过的任务是 unknown；从未提交的排队任务是 interrupted，均不自动重发。人工继续产生新关联执行，并要求明确下一步。成功分项保留，未知分项先核对，不自动补发。
+
+停止当前任务不改变 automation.enabled。新数据事件仍可按已启用策略创建另一任务；重复同事件不能复活原任务。停止与自动任务设置在 UI 是两个独立入口。
+
+## 4. 批准与澄清卡
+
+本地业务确认、原生工具批准、澄清三者不等价。原生卡保存实际任务、请求标识及内容指纹。点击前读取当前待处理请求，比较 key 和身份；已经结束、停止、过期或被其他端处理则拒绝旧操作。
+
+UI 仅提供“本次允许/拒绝”，不把批准扩大成永久白名单。等待没有响应不会自动批准。WebUI Gateway 镜像额外令牌仅在后端保存并按原请求转发；不把它显示给业务人员。
+
+若上游请求没有稳定 approval_id / request_id，卡片会说明需要在原端处理。缺少 mirror_token 时不能猜一个批准对象，也不会丢掉标识后尝试批准队首。原端支持缺陷需要升级或最小兼容修正；本包不会自动修改你的 Hermes。
+
+批准 POST 返回被接受后仍从原端观察后续，不把点击动作视为业务执行成功。批准超时/过期不自动启动新的执行。
+
+## 5. 旧接口与 YOLO
+
+Legacy 仅显式选择，使用 Chat Completions。必须确认远端已按用户授权配置 YOLO。前端勾选不会伪造远端安全配置，也不取消工作台已经定义的业务确认。
+
+WebUI 若显式开启兼容 YOLO，适配器调用原端会话设置，并检查返回 yolo_enabled=true 才继续。正常协议失败不会偷偷切换成旧协议或重复执行。
+
+旧 Chat Completions 在本版中不具备可查询远端执行号、原生批准、可靠远端停止或后端重启后重新订阅能力。停止会阻止本任务后续工作台写操作，但必须到原端核对执行。**要满足完整刷新/停止/批准验收，应选现代 Runs 或支持相应原生接口的 WebUI。**
+
+## 6. 同机和公网地址
+
+URL 校验只检查合法 HTTP(S) 地址，不限制内网。工作台后端访问 WebUI，因此浏览器 CORS 不是这条连接的前提。WebUI 的 CSRF、登录和路由前缀仍需正确处理。
+
+同机时提示词包含实际项目脚本路径和工作台地址。跨机可填写对 Hermes 可达的桥接地址；公网 WebUI 并不自动拥有员工电脑文件系统。没有互通时，聊天仍可用，但直接桥接数据和业务代码修改不能声称已接通。
+
+## 7. 接入参考及证据界限
+
+本次依据以下公开资料核对接口形状；没有打包上游源码，没有声明固定了上游 commit，也没有静默修改远端：
+
+- Hermes API 文档：https://hermes-agent.nousresearch.com/docs/user-guide/features/api-server/
+- Native Runs 实现：https://raw.githubusercontent.com/NousResearch/hermes-agent/main/gateway/platforms/api_server_runs.py
+- WebUI 项目：https://github.com/nesquena/hermes-webui
+- WebUI 路由：https://raw.githubusercontent.com/nesquena/hermes-webui/master/api/routes.py
+- CSRF 页面配置：https://raw.githubusercontent.com/nesquena/hermes-webui/master/static/index.html
+
+测试分三层：本地业务逻辑和 SQLite 真实执行；协议测试对端验证请求字段、状态和错误；你的实际 Hermes/Skills 需配置后现场联调。前两层通过不替代第三层。

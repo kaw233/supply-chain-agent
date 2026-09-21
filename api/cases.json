@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "note": "Extra isolated/read-only tests. External effects never run automatically.",
+  "cases": [
+    {
+      "name": "Health must report ok",
+      "operationId": "health",
+      "assertions": [
+        {
+          "path": "/ok",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "List installed scenarios",
+      "operationId": "listScenarios",
+      "assertions": [
+        {
+          "path": "",
+          "type": "array",
+          "min_length": 1
+        }
+      ]
+    }
+  ]
+}

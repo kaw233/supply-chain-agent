@@ -1,0 +1,30 @@
+# Local Python environments and caches
+.venv/
+.venv-*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Build and package outputs
+build/
+dist/
+*.egg-info/
+
+# Runtime configuration and credentials
+.env
+.env.*
+!.env.example
+
+# Runtime state: databases, DSH profiles, received artifacts and reports
+data/
+reports/
+*.sqlite3
+*.sqlite3-*
+*.log
+
+# Legacy generator metadata; not part of the public source package
+TEMPLATE_SOURCE_MANIFEST.json

@@ -1,0 +1,35 @@
+{
+  "contract_version": "1",
+  "purpose": "Provider-neutral registration hints for the local DSH deployment",
+  "mcp": [
+    {
+      "id": "supply-chain-mock-erp",
+      "transport": "streamable-http",
+      "url": "http://127.0.0.1:8000/mcp",
+      "tools": [
+        "prepare_expedite",
+        "commit_expedite",
+        "rollback_expedite",
+        "get_operation_status"
+      ],
+      "scope": "local-development-only"
+    }
+  ],
+  "scheduled_inputs": [
+    {
+      "id": "feishu-cli-material-images",
+      "producer": "external DSH scheduled job + Feishu CLI skill",
+      "method": "POST",
+      "path": "/api/integrations/feishu/{scenario_id}/batches",
+      "contract": "scheduled-feishu-cli-v1",
+      "realtime_agent_generation": false
+    }
+  ],
+  "rag": {
+    "mode": "contract-only",
+    "capabilities": "/api/rag/capabilities",
+    "query": "/api/rag/collections/{collection_id}/query",
+    "live_retrieval_verified": false
+  },
+  "note": "This is an integration contract, not a universal DSH profile. Register the MCP URL using provider-specific DSH tool/skill configuration in the deployment environment."
+}

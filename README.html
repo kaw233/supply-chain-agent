@@ -1,0 +1,18 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>供应链 Agent 工作台 v2.2.0-rag · Apache-2.0 开源版</title><style>body{background:#f4f6f8;color:#263540;margin:0;font:15px/1.85 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1120px;margin:25px auto;padding:32px 42px;background:white;border-top:4px solid #c75840}h1{font-size:30px;line-height:1.4}h2{font-size:22px;margin-top:32px;border-bottom:1px solid #e1e5e8;padding-bottom:8px}h3{font-size:17px}a{color:#ac4a34;overflow-wrap:anywhere}table{border-collapse:collapse;font-size:12px;width:100%;display:block;overflow:auto}td,th{border:1px solid #dce3e7;padding:9px;vertical-align:top;text-align:left}th{background:#f2f5f7}pre{background:#eff3f5;padding:16px;overflow:auto;max-height:560px}code{font:12px/1.7 Consolas,monospace;overflow-wrap:anywhere}blockquote{border-left:3px solid #d0937f;background:#fbf7f3;margin:18px 0;padding:10px 17px}nav{display:flex;flex-wrap:wrap;gap:15px;font-size:12px;border-bottom:1px solid #eee;padding-bottom:13px}footer{font-size:12px;color:#7b8891;border-top:1px solid #eee;margin-top:32px;padding-top:14px}img{max-width:100%}@media(max-width:700px){main{margin:0;padding:20px}h1{font-size:25px}}</style></head><body><main><h1>供应链 Agent 工作台 v2.2.0-rag · Apache-2.0 开源版</h1>
+<blockquote>本项目采用 <strong>Apache License 2.0</strong> 开源。当前实现边界与发布验证见 <code>OPEN_SOURCE_RELEASE.md</code>。</blockquote>
+<p>自带物料、交期、质量三个合成业务样例。基础工作台可独立运行；Agent 模式直接使用本机 <code>deepseek-harness-sdk</code>，并保留 Hermes 兼容适配。</p>
+<pre><code class="language-bash">python server.py --open
+python doctor.py
+python verify.py
+</code></pre>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m pip install -r requirements-dsh.txt
+.\.venv\Scripts\python.exe server.py --open
+</code></pre>
+<p>默认 http://127.0.0.1:8765 。必要时 <code>python server.py --host 0.0.0.0 --port 8765 --db /持久磁盘/workbench.sqlite3</code>。存储默认 <code>data/workbench.sqlite3</code>，也可复制.env.example为.env并设置WORKBENCH_DB；启动参数优先。</p>
+<p>左侧切场景；右侧公共导航切目标、数据、Case、规则、证据等，旁边是 Agent。浏览器刷新只恢复观察，不重新提交任务。</p>
+<p>代码含 <code>app/data_workspace.py</code>、<code>web/data-workspace.js/css</code>、72 个 HTTP 接口统一注册与 API 测试。rules-view显示当时实际配置和登记的规则原文，而不是新的AI摘要。完整追溯以显式_source_refs为准，没有记录的Python内部中间结果不猜测。</p>
+<p><code>doctor.py</code> 检查 Python、真实 SQLite、API 导出和可选 DSH SDK，不调用模型。<code>verify_dsh.py --live</code> 才会显式调用一次当前配置的真实模型。</p>
+<p>详见 <code>docs/数据工作区与数据版本.md</code>、<code>docs/API合同与验收分层.md</code>。本模板为已提供样例的可运行基座，不宣称已验证未提供的企业正式规则，也没有真实发送邮件或飞书消息。</p>
+<p><code>business-v1.2</code> 仅作为旧场景兼容 ID 保留，不表示运行时依赖旧 ZIP 或外部生成平台。</p>
+<p>本地 DSH 进程、配置、批准、重启边界和验证命令见 <code>docs/DSH本地SDK接入.md</code>。没有实际模型地址与密钥时，不声明真实模型、MCP 或飞书已联调。定时飞书图片由外部 DSH 任务与飞书 CLI Skill 拉取；工作台提供 <code>scheduled-feishu-cli-v1</code> 脱敏批次接收合同，不实时生成图片。</p>
+<footer>Apache-2.0 · 供应链 Agent 工作台 2.2.0-rag；实际运行与未验证范围分别记录。</footer></main></body></html>

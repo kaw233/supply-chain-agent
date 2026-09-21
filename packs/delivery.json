@@ -1,0 +1,641 @@
+{
+  "schema_version": "1.0",
+  "id": "delivery",
+  "version": 1,
+  "name": "交期承诺跟进",
+  "subtitle": "DELIVERY RELIABILITY",
+  "description": "保障订单交付承诺",
+  "template": "portfolio",
+  "goal": {
+    "label": "保障订单交付承诺",
+    "target": 95,
+    "unit": "%",
+    "metric_label": "正常订单占比"
+  },
+  "fields": [
+    {
+      "key": "id",
+      "label": "对象编号",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "name",
+      "label": "业务对象",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "owner",
+      "label": "责任人",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "owner_email",
+      "label": "责任人邮箱",
+      "type": "string"
+    },
+    {
+      "key": "site",
+      "label": "工厂",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "supplier",
+      "label": "供应商",
+      "type": "string"
+    },
+    {
+      "key": "planned",
+      "label": "计划数量",
+      "type": "number",
+      "required": true
+    },
+    {
+      "key": "delivered",
+      "label": "已交数量",
+      "type": "number",
+      "required": true
+    },
+    {
+      "key": "delay_days",
+      "label": "延期天数",
+      "type": "number",
+      "required": true
+    },
+    {
+      "key": "order_value",
+      "label": "订单金额",
+      "type": "number",
+      "required": true
+    }
+  ],
+  "mapping": {},
+  "parameters": {
+    "critical_days": 3
+  },
+  "derived": [
+    {
+      "key": "remaining",
+      "label": "未交数量",
+      "expr": "max(planned - delivered, 0)"
+    },
+    {
+      "key": "coverage",
+      "label": "交付进度",
+      "expr": "round(min(delivered / max(planned, 1) * 100, 100), 1)"
+    },
+    {
+      "key": "impact",
+      "label": "关联订单金额（非损失）",
+      "expr": "order_value if remaining > 0 and delay_days > 0 else 0"
+    }
+  ],
+  "rules": [
+    {
+      "id": "R-D01",
+      "name": "严重逾期",
+      "when": "remaining > 0 and delay_days >= critical_days",
+      "severity": "high",
+      "reason": "仍有 {remaining} 件未交付，已延期 {delay_days} 天。"
+    },
+    {
+      "id": "R-D02",
+      "name": "交期偏差",
+      "when": "remaining > 0 and delay_days > 0",
+      "severity": "medium",
+      "reason": "已延期 {delay_days} 天，需要更新交付承诺。"
+    },
+    {
+      "id": "R-D03",
+      "name": "交付正常",
+      "when": "True",
+      "severity": "normal",
+      "reason": "未命中当前交期偏差规则。"
+    }
+  ],
+  "case": {
+    "key": "id",
+    "title": "{name}",
+    "owner_field": "owner",
+    "close_policy": "normal_after_rerun"
+  },
+  "actions": {
+    "email.send": {
+      "title": "责任人协同邮件",
+      "group_by": "owner_email",
+      "subject": "[{scene}] {owner} 的 {count} 项待处理事项",
+      "body": "{owner}，你好：\n\n以下事项需要跟进：\n{items}\n\n请补充承诺、处理计划或佐证，并在工作台登记反馈。\n场景：{scene}\n本通知为场景模板生成。",
+      "executor": "hermes_skill",
+      "ui": "notification",
+      "name": "协同邮件",
+      "skill_hint": "",
+      "instruction": "使用已安装的邮件发送 Skill 发送已确认的通知。",
+      "recipient_field": "owner_email",
+      "recipient_label": "收件人邮箱"
+    },
+    "feishu.send": {
+      "title": "飞书群协同",
+      "group_by": "owner",
+      "body": "{scene}：本次有 {count} 项需要协同。\n{items}",
+      "executor": "hermes_skill",
+      "ui": "notification",
+      "name": "飞书通知",
+      "skill_hint": "",
+      "instruction": "使用已安装的飞书操作 Skill 发送已确认的通知。",
+      "recipient_field": "feishu_target",
+      "recipient_label": "飞书目标（群或用户标识）"
+    },
+    "feishu.read": {
+      "name": "飞书查证",
+      "executor": "hermes_skill",
+      "ui": "query",
+      "skill_hint": "",
+      "instruction": "使用已安装的飞书读取 Skill 查询指定业务对象的相关协同记录。返回原文摘要、来源和时间；缺少 Skill 或访问权限时明确说明。不要使用本地演示消息。"
+    }
+  },
+  "triggers": {
+    "data_ready": true,
+    "manual": true,
+    "agent": true,
+    "auto_prepare": false,
+    "auto_capability": "email.send"
+  },
+  "layout": [
+    "goals",
+    "pipeline",
+    "trend",
+    "distribution",
+    "workload",
+    "table",
+    "activity"
+  ],
+  "acceptance": [
+    {
+      "name": "延期 5 天且未交完 → 高风险",
+      "record": {
+        "id": "D1",
+        "name": "订单测试",
+        "owner": "测试员",
+        "site": "工厂",
+        "planned": 100,
+        "delivered": 50,
+        "delay_days": 5,
+        "order_value": 10000
+      },
+      "expected": {
+        "severity": "high",
+        "remaining": 50
+      }
+    },
+    {
+      "name": "已经交完 → 正常",
+      "record": {
+        "id": "D2",
+        "name": "订单测试",
+        "owner": "测试员",
+        "site": "工厂",
+        "planned": 100,
+        "delivered": 100,
+        "delay_days": 5,
+        "order_value": 10000
+      },
+      "expected": {
+        "severity": "normal"
+      }
+    }
+  ],
+  "demo_records": [
+    {
+      "id": "SO-4301",
+      "name": "智能装配线项目",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "苏州工厂",
+      "supplier": "华芯精密",
+      "planned": 100,
+      "delivered": 100,
+      "delay_days": 0,
+      "order_value": 50000
+    },
+    {
+      "id": "SO-4302",
+      "name": "工业网关交付",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "东莞工厂",
+      "supplier": "远峰机电",
+      "planned": 100,
+      "delivered": 78,
+      "delay_days": 1,
+      "order_value": 80000
+    },
+    {
+      "id": "SO-4303",
+      "name": "自动检测工站",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "武汉工厂",
+      "supplier": "东立电子",
+      "planned": 200,
+      "delivered": 144,
+      "delay_days": 2,
+      "order_value": 160000
+    },
+    {
+      "id": "SO-4304",
+      "name": "车规控制器项目",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "苏州工厂",
+      "supplier": "恒泰工业",
+      "planned": 500,
+      "delivered": 445,
+      "delay_days": 3,
+      "order_value": 180000
+    },
+    {
+      "id": "SO-4305",
+      "name": "智能装配线项目",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "东莞工厂",
+      "supplier": "华芯精密",
+      "planned": 500,
+      "delivered": 500,
+      "delay_days": 5,
+      "order_value": 180000
+    },
+    {
+      "id": "SO-4306",
+      "name": "工业网关交付",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "武汉工厂",
+      "supplier": "远峰机电",
+      "planned": 200,
+      "delivered": 91,
+      "delay_days": 0,
+      "order_value": 100000
+    },
+    {
+      "id": "SO-4307",
+      "name": "自动检测工站",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "苏州工厂",
+      "supplier": "东立电子",
+      "planned": 200,
+      "delivered": 135,
+      "delay_days": 8,
+      "order_value": 100000
+    },
+    {
+      "id": "SO-4308",
+      "name": "车规控制器项目",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "东莞工厂",
+      "supplier": "恒泰工业",
+      "planned": 500,
+      "delivered": 371,
+      "delay_days": 0,
+      "order_value": 180000
+    },
+    {
+      "id": "SO-4309",
+      "name": "智能装配线项目",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "武汉工厂",
+      "supplier": "华芯精密",
+      "planned": 200,
+      "delivered": 200,
+      "delay_days": 0,
+      "order_value": 160000
+    },
+    {
+      "id": "SO-4310",
+      "name": "工业网关交付",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "苏州工厂",
+      "supplier": "远峰机电",
+      "planned": 200,
+      "delivered": 159,
+      "delay_days": 1,
+      "order_value": 160000
+    },
+    {
+      "id": "SO-4311",
+      "name": "自动检测工站",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "东莞工厂",
+      "supplier": "东立电子",
+      "planned": 500,
+      "delivered": 169,
+      "delay_days": 2,
+      "order_value": 180000
+    },
+    {
+      "id": "SO-4312",
+      "name": "车规控制器项目",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "武汉工厂",
+      "supplier": "恒泰工业",
+      "planned": 500,
+      "delivered": 304,
+      "delay_days": 3,
+      "order_value": 400000
+    },
+    {
+      "id": "SO-4313",
+      "name": "智能装配线项目",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "苏州工厂",
+      "supplier": "华芯精密",
+      "planned": 500,
+      "delivered": 500,
+      "delay_days": 5,
+      "order_value": 400000
+    },
+    {
+      "id": "SO-4314",
+      "name": "工业网关交付",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "东莞工厂",
+      "supplier": "远峰机电",
+      "planned": 200,
+      "delivered": 92,
+      "delay_days": 0,
+      "order_value": 72000
+    },
+    {
+      "id": "SO-4315",
+      "name": "自动检测工站",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "武汉工厂",
+      "supplier": "东立电子",
+      "planned": 500,
+      "delivered": 408,
+      "delay_days": 8,
+      "order_value": 250000
+    },
+    {
+      "id": "SO-4316",
+      "name": "车规控制器项目",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "苏州工厂",
+      "supplier": "恒泰工业",
+      "planned": 100,
+      "delivered": 31,
+      "delay_days": 0,
+      "order_value": 80000
+    },
+    {
+      "id": "SO-4317",
+      "name": "智能装配线项目",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "东莞工厂",
+      "supplier": "华芯精密",
+      "planned": 200,
+      "delivered": 200,
+      "delay_days": 0,
+      "order_value": 100000
+    },
+    {
+      "id": "SO-4318",
+      "name": "工业网关交付",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "武汉工厂",
+      "supplier": "远峰机电",
+      "planned": 100,
+      "delivered": 23,
+      "delay_days": 1,
+      "order_value": 50000
+    },
+    {
+      "id": "SO-4319",
+      "name": "自动检测工站",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "苏州工厂",
+      "supplier": "东立电子",
+      "planned": 200,
+      "delivered": 40,
+      "delay_days": 2,
+      "order_value": 160000
+    },
+    {
+      "id": "SO-4320",
+      "name": "车规控制器项目",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "东莞工厂",
+      "supplier": "恒泰工业",
+      "planned": 500,
+      "delivered": 183,
+      "delay_days": 3,
+      "order_value": 400000
+    },
+    {
+      "id": "SO-4321",
+      "name": "智能装配线项目",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "武汉工厂",
+      "supplier": "华芯精密",
+      "planned": 500,
+      "delivered": 500,
+      "delay_days": 5,
+      "order_value": 250000
+    },
+    {
+      "id": "SO-4322",
+      "name": "工业网关交付",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "苏州工厂",
+      "supplier": "远峰机电",
+      "planned": 200,
+      "delivered": 150,
+      "delay_days": 0,
+      "order_value": 72000
+    },
+    {
+      "id": "SO-4323",
+      "name": "自动检测工站",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "东莞工厂",
+      "supplier": "东立电子",
+      "planned": 200,
+      "delivered": 78,
+      "delay_days": 8,
+      "order_value": 160000
+    },
+    {
+      "id": "SO-4324",
+      "name": "车规控制器项目",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "武汉工厂",
+      "supplier": "恒泰工业",
+      "planned": 200,
+      "delivered": 96,
+      "delay_days": 0,
+      "order_value": 160000
+    },
+    {
+      "id": "SO-4325",
+      "name": "智能装配线项目",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "苏州工厂",
+      "supplier": "华芯精密",
+      "planned": 200,
+      "delivered": 200,
+      "delay_days": 0,
+      "order_value": 160000
+    },
+    {
+      "id": "SO-4326",
+      "name": "工业网关交付",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "东莞工厂",
+      "supplier": "远峰机电",
+      "planned": 200,
+      "delivered": 110,
+      "delay_days": 1,
+      "order_value": 72000
+    },
+    {
+      "id": "SO-4327",
+      "name": "自动检测工站",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "武汉工厂",
+      "supplier": "东立电子",
+      "planned": 100,
+      "delivered": 68,
+      "delay_days": 2,
+      "order_value": 50000
+    },
+    {
+      "id": "SO-4328",
+      "name": "车规控制器项目",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "苏州工厂",
+      "supplier": "恒泰工业",
+      "planned": 100,
+      "delivered": 29,
+      "delay_days": 3,
+      "order_value": 50000
+    },
+    {
+      "id": "SO-4329",
+      "name": "智能装配线项目",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "东莞工厂",
+      "supplier": "华芯精密",
+      "planned": 200,
+      "delivered": 200,
+      "delay_days": 5,
+      "order_value": 72000
+    },
+    {
+      "id": "SO-4330",
+      "name": "工业网关交付",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "武汉工厂",
+      "supplier": "远峰机电",
+      "planned": 100,
+      "delivered": 62,
+      "delay_days": 0,
+      "order_value": 80000
+    },
+    {
+      "id": "SO-4331",
+      "name": "自动检测工站",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "苏州工厂",
+      "supplier": "东立电子",
+      "planned": 200,
+      "delivered": 54,
+      "delay_days": 8,
+      "order_value": 100000
+    },
+    {
+      "id": "SO-4332",
+      "name": "车规控制器项目",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "东莞工厂",
+      "supplier": "恒泰工业",
+      "planned": 500,
+      "delivered": 242,
+      "delay_days": 0,
+      "order_value": 250000
+    }
+  ],
+  "data_note": "内置合成演示数据，不代表真实企业业务。",
+  "agent_context": "围绕当前场景的数据和证据解释问题。使用平台动作草案，不声称已经发出通知。",
+  "columns": [
+    {
+      "key": "id",
+      "label": "订单编号",
+      "format": "text"
+    },
+    {
+      "key": "name",
+      "label": "订单项目",
+      "format": "text"
+    },
+    {
+      "key": "owner",
+      "label": "责任人",
+      "format": "text"
+    },
+    {
+      "key": "planned",
+      "label": "计划",
+      "format": "number"
+    },
+    {
+      "key": "delivered",
+      "label": "已交",
+      "format": "number"
+    },
+    {
+      "key": "remaining",
+      "label": "待交",
+      "format": "number"
+    },
+    {
+      "key": "coverage",
+      "label": "进度",
+      "format": "percent"
+    },
+    {
+      "key": "delay_days",
+      "label": "延期",
+      "format": "days"
+    }
+  ],
+  "impact_label": "关联订单金额（非损失）"
+}

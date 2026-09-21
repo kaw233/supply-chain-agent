@@ -1,0 +1,42 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>成品API合同和批量测试</title><style>body{background:#f4f6f8;color:#263540;margin:0;font:15px/1.85 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1120px;margin:25px auto;padding:32px 42px;background:white;border-top:4px solid #c75840}h1{font-size:30px;line-height:1.4}h2{font-size:22px;margin-top:32px;border-bottom:1px solid #e1e5e8;padding-bottom:8px}h3{font-size:17px}a{color:#ac4a34;overflow-wrap:anywhere}table{border-collapse:collapse;font-size:12px;width:100%;display:block;overflow:auto}td,th{border:1px solid #dce3e7;padding:9px;vertical-align:top;text-align:left}th{background:#f2f5f7}pre{background:#eff3f5;padding:16px;overflow:auto;max-height:560px}code{font:12px/1.7 Consolas,monospace;overflow-wrap:anywhere}blockquote{border-left:3px solid #d0937f;background:#fbf7f3;margin:18px 0;padding:10px 17px}nav{display:flex;flex-wrap:wrap;gap:15px;font-size:12px;border-bottom:1px solid #eee;padding-bottom:13px}footer{font-size:12px;color:#7b8891;border-top:1px solid #eee;margin-top:32px;padding-top:14px}img{max-width:100%}@media(max-width:700px){main{margin:0;padding:20px}h1{font-size:25px}}</style></head><body><main><h1>成品API合同和批量测试</h1>
+<p>实际HTTP路由注册源为 <code>app/api_contract.py</code>，<code>server.py</code> 请求分发也使用它。导出不是第二份手工清单。</p>
+<table>
+<thead>
+<tr>
+<th>文件或入口</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>api/inventory.json 或 /api/catalog</td>
+<td>72 个实际 HTTP 操作及桥接目录</td>
+</tr>
+<tr>
+<td>api/openapi.json 或 /api/openapi.json</td>
+<td>OpenAPI3.1，与当前注册路由一致</td>
+</tr>
+<tr>
+<td>api/test-plan.json、api/cases.json</td>
+<td>测试策略、用例与业务断言</td>
+</tr>
+<tr>
+<td>/api-docs</td>
+<td>离线资源的接口阅读页</td>
+</tr>
+<tr>
+<td>scripts/test_api.py</td>
+<td>本地真实HTTP检查，不靠模型描述成功</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-bash">python scripts/export_api.py
+python scripts/test_api.py --isolated --report reports/api-report.json
+python -m unittest discover -s tests -v
+# 对已启动实例默认只读；路径参数见本成品说明
+python scripts/test_api.py --base http://127.0.0.1:8765 --report reports/read-only.json
+</code></pre>
+<p>新数据工作区的查询必须保持同一 <code>snapshot</code>。版本查询支持from/to/cursor/limit；行查询支持snapshot/table/cursor/limit、severity/owner/site/rule_id/risk和行键q。快捷提示POST不发外部动作；snapshot-notes仅追加复盘。</p>
+<p>批量报告区分正例成功、参数负例、SKIP 和 FAIL。某接口正确返回 404/400 只证明拒绝路径，不当作业务成功。当前隔离检查结果以本次生成的 <code>reports/api-report.json</code> 为准；目前登记 72 个操作。缺真实 Hermes 执行号、凭据或生产外部动作的接口明确跳过，不补造回执。</p>
+<p>可运行预览不等于“已验收交付”；发布前仍要通过本地关键检查。独立发布包必须在全新虚拟环境安装声明依赖并复验，不能用开发机环境掩盖漏依赖。HTTP 200 不证明全部业务规则正确。</p>
+<footer>供应链 Agent 工作台 2.2.0-rag；实际运行与未验证范围分别记录。</footer></main></body></html>

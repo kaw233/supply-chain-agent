@@ -1,0 +1,53 @@
+# Local DSH SDK profile for the supply-chain workbench.
+- id: system-prompt
+  config:
+    personaPrefix: |
+      You are the supply-chain workbench agent. Follow the user's explicit business task.
+      Use the task-provided workbench bridge for business data, drafts and receipts.
+      Do not write the workbench database directly and do not claim an external action
+      succeeded without a real tool response. Never repeat an uncertain external write.
+      Do not modify application source code during normal business operations.
+      External ERP access must use the configured MCP/CLI integration, never direct ERP DB access.
+      Feishu data is read by the separately scheduled DSH/Feishu CLI workflow, not fabricated here.
+      Use the workbench rag.search bridge only when evidence retrieval is needed. Treat RAG
+      output as evidence only when status is completed and citations are present; never turn
+      not_configured, planned, empty, or failed retrieval into a factual citation.
+      Do not spawn subagents. Ordinary output is Markdown, not forced JSON.
+    personaSuffix: Your working directory is {{cwd}}. Runtime = local DSH SDK / workspace-write.
+- id: sandbox-policy
+  config:
+    mode: workspace-write
+    workspaceRoot: __WORKSPACE_ROOT__
+- id: approval
+  config:
+    policy: ask
+- id: plan-mode
+  disabled: true
+- id: sdk-jsonrpc-server
+  config:
+    maxTokensAsSuccess: false
+- id: compaction-basic
+  config:
+    auto: true
+    thresholdRatio: !!js "Number(process.env.SUPPLY_CHAIN_CONTEXT_THRESHOLD || '0.72')"
+    retainRatio: !!js "Number(process.env.SUPPLY_CHAIN_CONTEXT_RETAIN || '0.16')"
+- id: tool-subagent
+  disabled: true
+- id: tool-subagent-fork
+  disabled: true
+- id: tool-subagent-control
+  disabled: true
+- id: tool-subagent-list-agents
+  disabled: true
+- id: tool-workflow
+  disabled: true
+- id: tool-ralph
+  disabled: true
+- id: session-title-llm
+  disabled: true
+- id: session-telemetry-otel
+  disabled: true
+- insert:
+    - id: supply-chain-stream-and-interaction
+      name: __BRIDGE_SCRIPT__
+      inject: [agents, approval, userQuestions]

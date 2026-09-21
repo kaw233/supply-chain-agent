@@ -1,0 +1,970 @@
+{
+  "schema_version": "1.0",
+  "id": "materials",
+  "version": 1,
+  "name": "物料齐套协同",
+  "subtitle": "MATERIAL READINESS",
+  "description": "保障订单按期开工",
+  "template": "operations",
+  "goal": {
+    "label": "保障订单按期开工",
+    "target": 95,
+    "unit": "%",
+    "metric_label": "检查通过率"
+  },
+  "fields": [
+    {
+      "key": "id",
+      "label": "对象编号",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "name",
+      "label": "业务对象",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "owner",
+      "label": "责任人",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "owner_email",
+      "label": "责任人邮箱",
+      "type": "string"
+    },
+    {
+      "key": "site",
+      "label": "工厂",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "supplier",
+      "label": "供应商",
+      "type": "string"
+    },
+    {
+      "key": "demand",
+      "label": "需求数量",
+      "type": "number",
+      "required": true
+    },
+    {
+      "key": "stock",
+      "label": "可用库存",
+      "type": "number",
+      "required": true
+    },
+    {
+      "key": "inbound",
+      "label": "确认在途",
+      "type": "number",
+      "required": true
+    },
+    {
+      "key": "due_days",
+      "label": "距用料天数",
+      "type": "number",
+      "required": true
+    },
+    {
+      "key": "unit_price",
+      "label": "演示单价",
+      "type": "number",
+      "required": true
+    }
+  ],
+  "mapping": {},
+  "parameters": {
+    "urgent_days": 3,
+    "watch_days": 14
+  },
+  "derived": [
+    {
+      "key": "shortage",
+      "label": "缺口数量",
+      "expr": "max(demand - stock - inbound, 0)"
+    },
+    {
+      "key": "coverage",
+      "label": "齐套比例",
+      "expr": "round(min((stock + inbound) / max(demand, 1) * 100, 100), 1)"
+    },
+    {
+      "key": "impact",
+      "label": "缺口金额（演示估算）",
+      "expr": "shortage * unit_price"
+    }
+  ],
+  "rules": [
+    {
+      "id": "R-M01",
+      "name": "紧急欠料",
+      "when": "shortage > 0 and due_days <= urgent_days",
+      "severity": "high",
+      "reason": "缺口 {shortage} 件，距用料 {due_days} 天；进入紧急窗口 {urgent_days} 天。"
+    },
+    {
+      "id": "R-M02",
+      "name": "计划欠料",
+      "when": "shortage > 0 and due_days <= watch_days",
+      "severity": "medium",
+      "reason": "缺口 {shortage} 件，需要跟进确认在途与交付承诺。"
+    },
+    {
+      "id": "R-M03",
+      "name": "齐套 / 窗口外",
+      "when": "True",
+      "severity": "normal",
+      "reason": "当前检查窗口内未命中欠料风险规则。"
+    }
+  ],
+  "case": {
+    "key": "id",
+    "title": "{name}",
+    "owner_field": "owner",
+    "close_policy": "normal_after_rerun"
+  },
+  "actions": {
+    "erp.expedite": {
+      "title": "供应商催交",
+      "group_by": "id",
+      "subject": "[{scene}] 缺料催交确认",
+      "body": "请按已确认的缺料数据发起催交：\n{items}\n\n必须先调用 prepare_expedite，再调用 commit_expedite；对象版本变化时停止提交。",
+      "executor": "hermes_skill",
+      "ui": "notification",
+      "name": "供应商催交",
+      "operation_type": "expedite",
+      "skill_hint": "supply-chain-mock-erp",
+      "instruction": "使用已安装的 Mock ERP MCP 工具处理已确认的催交请求。严格使用消息 payload：先调用 prepare_expedite，成功后再使用同一对象版本调用 commit_expedite；最后将外部编号通过 action.receipt 登记。",
+      "recipient_field": "supplier",
+      "recipient_label": "供应商"
+    },
+    "email.send": {
+      "title": "责任人协同邮件",
+      "group_by": "owner_email",
+      "subject": "[{scene}] {owner} 的 {count} 项待处理事项",
+      "body": "{owner}，你好：\n\n以下事项需要跟进：\n{items}\n\n请补充承诺、处理计划或佐证，并在工作台登记反馈。\n场景：{scene}\n本通知为场景模板生成。",
+      "executor": "hermes_skill",
+      "ui": "notification",
+      "name": "协同邮件",
+      "skill_hint": "",
+      "instruction": "使用已安装的邮件发送 Skill 发送已确认的通知。",
+      "recipient_field": "owner_email",
+      "recipient_label": "收件人邮箱"
+    },
+    "feishu.send": {
+      "title": "飞书群协同",
+      "group_by": "owner",
+      "body": "{scene}：本次有 {count} 项需要协同。\n{items}",
+      "executor": "hermes_skill",
+      "ui": "notification",
+      "name": "飞书通知",
+      "skill_hint": "",
+      "instruction": "使用已安装的飞书操作 Skill 发送已确认的通知。",
+      "recipient_field": "feishu_target",
+      "recipient_label": "飞书目标（群或用户标识）"
+    },
+    "feishu.read": {
+      "name": "飞书查证",
+      "executor": "hermes_skill",
+      "ui": "query",
+      "skill_hint": "",
+      "instruction": "使用已安装的飞书读取 Skill 查询指定业务对象的相关协同记录。返回原文摘要、来源和时间；缺少 Skill 或访问权限时明确说明。不要使用本地演示消息。"
+    }
+  },
+  "triggers": {
+    "data_ready": true,
+    "manual": true,
+    "agent": true,
+    "auto_prepare": false,
+    "auto_capability": "erp.expedite"
+  },
+  "layout": [
+    "goals",
+    "pipeline",
+    "trend",
+    "distribution",
+    "workload",
+    "table",
+    "activity"
+  ],
+  "acceptance": [
+    {
+      "name": "临近用料且存在缺口 → 高风险",
+      "record": {
+        "id": "T1",
+        "name": "测试件",
+        "owner": "测试员",
+        "site": "测试工厂",
+        "demand": 100,
+        "stock": 30,
+        "inbound": 20,
+        "due_days": 2,
+        "unit_price": 100
+      },
+      "expected": {
+        "severity": "high",
+        "shortage": 50
+      }
+    },
+    {
+      "name": "库存已满足需求 → 正常",
+      "record": {
+        "id": "T2",
+        "name": "测试件",
+        "owner": "测试员",
+        "site": "测试工厂",
+        "demand": 100,
+        "stock": 100,
+        "inbound": 0,
+        "due_days": 2,
+        "unit_price": 100
+      },
+      "expected": {
+        "severity": "normal",
+        "shortage": 0
+      }
+    },
+    {
+      "name": "库存缺失 → 数据待补充",
+      "record": {
+        "id": "T3",
+        "name": "测试件",
+        "owner": "测试员",
+        "site": "测试工厂",
+        "demand": 100,
+        "stock": null,
+        "inbound": 0,
+        "due_days": 2,
+        "unit_price": 100
+      },
+      "expected": {
+        "severity": "unknown"
+      }
+    }
+  ],
+  "demo_records": [
+    {
+      "id": "MAT-2101",
+      "name": "伺服驱动模组",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "苏州工厂",
+      "supplier": "华芯精密",
+      "demand": 100,
+      "stock": 80,
+      "inbound": 20,
+      "due_days": 1,
+      "unit_price": 48,
+      "order_no": "MO-2609-108"
+    },
+    {
+      "id": "MAT-2102",
+      "name": "工业控制主板",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "东莞工厂",
+      "supplier": "远峰机电",
+      "demand": 160,
+      "stock": 120,
+      "inbound": 40,
+      "due_days": 2,
+      "unit_price": 320,
+      "order_no": "MO-2609-109"
+    },
+    {
+      "id": "MAT-2103",
+      "name": "精密减速器",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "武汉工厂",
+      "supplier": "东立电子",
+      "demand": 240,
+      "stock": 136,
+      "inbound": 20,
+      "due_days": 3,
+      "unit_price": 48,
+      "order_no": "MO-2609-110"
+    },
+    {
+      "id": "MAT-2104",
+      "name": "线性导轨组件",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "苏州工厂",
+      "supplier": "恒泰工业",
+      "demand": 100,
+      "stock": 66,
+      "inbound": 0,
+      "due_days": 4,
+      "unit_price": 160,
+      "order_no": "MO-2609-111"
+    },
+    {
+      "id": "MAT-2105",
+      "name": "光学传感单元",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "东莞工厂",
+      "supplier": "华芯精密",
+      "demand": 400,
+      "stock": 300,
+      "inbound": 20,
+      "due_days": 5,
+      "unit_price": 48,
+      "order_no": "MO-2609-112"
+    },
+    {
+      "id": "MAT-2106",
+      "name": "电源转换模块",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "武汉工厂",
+      "supplier": "远峰机电",
+      "demand": 400,
+      "stock": 380,
+      "inbound": 20,
+      "due_days": 6,
+      "unit_price": 160,
+      "order_no": "MO-2609-113"
+    },
+    {
+      "id": "MAT-2107",
+      "name": "耐压接插件",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "苏州工厂",
+      "supplier": "东立电子",
+      "demand": 240,
+      "stock": 240,
+      "inbound": 0,
+      "due_days": 7,
+      "unit_price": 160,
+      "order_no": "MO-2609-114"
+    },
+    {
+      "id": "MAT-2108",
+      "name": "铝合金壳体",
+      "owner": "周宁",
+      "owner_email": "",
+      "site": "东莞工厂",
+      "supplier": "恒泰工业",
+      "demand": 240,
+      "stock": 173,
+      "inbound": 0,
+      "due_days": 8,
+      "unit_price": 780,
+      "order_no": "MO-2609-115"
+    },
+    {
+      "id": "MAT-2109",
+      "name": "高频滤波器",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "武汉工厂",
+      "supplier": "华芯精密",
+      "demand": 600,
+      "stock": 487,
+      "inbound": 40,
+      "due_days": 9,
+      "unit_price": 160,
+      "order_no": "MO-2609-116"
+    },
+    {
+      "id": "MAT-2110",
+      "name": "控制线束总成",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "苏州工厂",
+      "supplier": "远峰机电",
+      "demand": 400,
+      "stock": null,
+      "inbound": 20,
+      "due_days": 10,
+      "unit_price": 320,
+      "order_no": "MO-2609-117"
+    },
+    {
+      "id": "MAT-2111",
+      "name": "液压阀体",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "东莞工厂",
+      "supplier": "东立电子",
+      "demand": 100,
+      "stock": 100,
+      "inbound": 0,
+      "due_days": 11,
+      "unit_price": 780,
+      "order_no": "MO-2609-118"
+    },
+    {
+      "id": "MAT-2112",
+      "name": "绝缘密封圈",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "武汉工厂",
+      "supplier": "恒泰工业",
+      "demand": 240,
+      "stock": 220,
+      "inbound": 20,
+      "due_days": 12,
+      "unit_price": 160,
+      "order_no": "MO-2609-119"
+    },
+    {
+      "id": "MAT-2113",
+      "name": "伺服驱动模组",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "苏州工厂",
+      "supplier": "华芯精密",
+      "demand": 160,
+      "stock": 90,
+      "inbound": 0,
+      "due_days": 1,
+      "unit_price": 320,
+      "order_no": "MO-2609-120"
+    },
+    {
+      "id": "MAT-2114",
+      "name": "工业控制主板",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "东莞工厂",
+      "supplier": "远峰机电",
+      "demand": 160,
+      "stock": 61,
+      "inbound": 20,
+      "due_days": 2,
+      "unit_price": 160,
+      "order_no": "MO-2609-121"
+    },
+    {
+      "id": "MAT-2115",
+      "name": "精密减速器",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "武汉工厂",
+      "supplier": "东立电子",
+      "demand": 600,
+      "stock": 484,
+      "inbound": 40,
+      "due_days": 3,
+      "unit_price": 320,
+      "order_no": "MO-2609-122"
+    },
+    {
+      "id": "MAT-2116",
+      "name": "线性导轨组件",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "苏州工厂",
+      "supplier": "恒泰工业",
+      "demand": 100,
+      "stock": 80,
+      "inbound": 20,
+      "due_days": 4,
+      "unit_price": 780,
+      "order_no": "MO-2609-123"
+    },
+    {
+      "id": "MAT-2117",
+      "name": "光学传感单元",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "东莞工厂",
+      "supplier": "华芯精密",
+      "demand": 600,
+      "stock": 560,
+      "inbound": 40,
+      "due_days": 5,
+      "unit_price": 160,
+      "order_no": "MO-2609-124"
+    },
+    {
+      "id": "MAT-2118",
+      "name": "电源转换模块",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "武汉工厂",
+      "supplier": "远峰机电",
+      "demand": 160,
+      "stock": 108,
+      "inbound": 0,
+      "due_days": 6,
+      "unit_price": 780,
+      "order_no": "MO-2609-125"
+    },
+    {
+      "id": "MAT-2119",
+      "name": "耐压接插件",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "苏州工厂",
+      "supplier": "东立电子",
+      "demand": 600,
+      "stock": 522,
+      "inbound": 0,
+      "due_days": 7,
+      "unit_price": 320,
+      "order_no": "MO-2609-126"
+    },
+    {
+      "id": "MAT-2120",
+      "name": "铝合金壳体",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "东莞工厂",
+      "supplier": "恒泰工业",
+      "demand": 240,
+      "stock": 200,
+      "inbound": 0,
+      "due_days": 8,
+      "unit_price": 160,
+      "order_no": "MO-2609-127"
+    },
+    {
+      "id": "MAT-2121",
+      "name": "高频滤波器",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "武汉工厂",
+      "supplier": "华芯精密",
+      "demand": 160,
+      "stock": 120,
+      "inbound": 40,
+      "due_days": 9,
+      "unit_price": 320,
+      "order_no": "MO-2609-128"
+    },
+    {
+      "id": "MAT-2122",
+      "name": "控制线束总成",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "苏州工厂",
+      "supplier": "远峰机电",
+      "demand": 240,
+      "stock": 240,
+      "inbound": 0,
+      "due_days": 10,
+      "unit_price": 48,
+      "order_no": "MO-2609-129"
+    },
+    {
+      "id": "MAT-2123",
+      "name": "液压阀体",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "东莞工厂",
+      "supplier": "东立电子",
+      "demand": 240,
+      "stock": 197,
+      "inbound": 0,
+      "due_days": 11,
+      "unit_price": 320,
+      "order_no": "MO-2609-130"
+    },
+    {
+      "id": "MAT-2124",
+      "name": "绝缘密封圈",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "武汉工厂",
+      "supplier": "恒泰工业",
+      "demand": 100,
+      "stock": 0,
+      "inbound": 40,
+      "due_days": 12,
+      "unit_price": 780,
+      "order_no": "MO-2609-131"
+    },
+    {
+      "id": "MAT-2125",
+      "name": "伺服驱动模组",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "苏州工厂",
+      "supplier": "华芯精密",
+      "demand": 240,
+      "stock": 187,
+      "inbound": 0,
+      "due_days": 1,
+      "unit_price": 780,
+      "order_no": "MO-2609-132"
+    },
+    {
+      "id": "MAT-2126",
+      "name": "工业控制主板",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "东莞工厂",
+      "supplier": "远峰机电",
+      "demand": 100,
+      "stock": 60,
+      "inbound": 40,
+      "due_days": 2,
+      "unit_price": 48,
+      "order_no": "MO-2609-133"
+    },
+    {
+      "id": "MAT-2127",
+      "name": "精密减速器",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "武汉工厂",
+      "supplier": "东立电子",
+      "demand": 100,
+      "stock": 60,
+      "inbound": 40,
+      "due_days": 3,
+      "unit_price": 320,
+      "order_no": "MO-2609-134"
+    },
+    {
+      "id": "MAT-2128",
+      "name": "线性导轨组件",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "苏州工厂",
+      "supplier": "恒泰工业",
+      "demand": 100,
+      "stock": 41,
+      "inbound": 0,
+      "due_days": 4,
+      "unit_price": 160,
+      "order_no": "MO-2609-135"
+    },
+    {
+      "id": "MAT-2129",
+      "name": "光学传感单元",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "东莞工厂",
+      "supplier": "华芯精密",
+      "demand": 240,
+      "stock": 167,
+      "inbound": 0,
+      "due_days": 5,
+      "unit_price": 48,
+      "order_no": "MO-2609-136"
+    },
+    {
+      "id": "MAT-2130",
+      "name": "电源转换模块",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "武汉工厂",
+      "supplier": "远峰机电",
+      "demand": 400,
+      "stock": 317,
+      "inbound": 40,
+      "due_days": 6,
+      "unit_price": 320,
+      "order_no": "MO-2609-137"
+    },
+    {
+      "id": "MAT-2131",
+      "name": "耐压接插件",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "苏州工厂",
+      "supplier": "东立电子",
+      "demand": 160,
+      "stock": 160,
+      "inbound": 0,
+      "due_days": 7,
+      "unit_price": 160,
+      "order_no": "MO-2609-138"
+    },
+    {
+      "id": "MAT-2132",
+      "name": "铝合金壳体",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "东莞工厂",
+      "supplier": "恒泰工业",
+      "demand": 240,
+      "stock": 200,
+      "inbound": 40,
+      "due_days": 8,
+      "unit_price": 320,
+      "order_no": "MO-2609-139"
+    },
+    {
+      "id": "MAT-2133",
+      "name": "高频滤波器",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "武汉工厂",
+      "supplier": "华芯精密",
+      "demand": 600,
+      "stock": 535,
+      "inbound": 0,
+      "due_days": 9,
+      "unit_price": 780,
+      "order_no": "MO-2609-140"
+    },
+    {
+      "id": "MAT-2134",
+      "name": "控制线束总成",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "苏州工厂",
+      "supplier": "远峰机电",
+      "demand": 240,
+      "stock": null,
+      "inbound": 20,
+      "due_days": 10,
+      "unit_price": 48,
+      "order_no": "MO-2609-141"
+    },
+    {
+      "id": "MAT-2135",
+      "name": "液压阀体",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "东莞工厂",
+      "supplier": "东立电子",
+      "demand": 100,
+      "stock": 28,
+      "inbound": 20,
+      "due_days": 11,
+      "unit_price": 48,
+      "order_no": "MO-2609-142"
+    },
+    {
+      "id": "MAT-2136",
+      "name": "绝缘密封圈",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "武汉工厂",
+      "supplier": "恒泰工业",
+      "demand": 100,
+      "stock": 80,
+      "inbound": 20,
+      "due_days": 12,
+      "unit_price": 320,
+      "order_no": "MO-2609-143"
+    },
+    {
+      "id": "MAT-2137",
+      "name": "伺服驱动模组",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "苏州工厂",
+      "supplier": "华芯精密",
+      "demand": 100,
+      "stock": 60,
+      "inbound": 40,
+      "due_days": 1,
+      "unit_price": 160,
+      "order_no": "MO-2609-144"
+    },
+    {
+      "id": "MAT-2138",
+      "name": "工业控制主板",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "东莞工厂",
+      "supplier": "远峰机电",
+      "demand": 600,
+      "stock": 545,
+      "inbound": 0,
+      "due_days": 2,
+      "unit_price": 780,
+      "order_no": "MO-2609-145"
+    },
+    {
+      "id": "MAT-2139",
+      "name": "精密减速器",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "武汉工厂",
+      "supplier": "东立电子",
+      "demand": 160,
+      "stock": 113,
+      "inbound": 0,
+      "due_days": 3,
+      "unit_price": 320,
+      "order_no": "MO-2609-146"
+    },
+    {
+      "id": "MAT-2140",
+      "name": "线性导轨组件",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "苏州工厂",
+      "supplier": "恒泰工业",
+      "demand": 240,
+      "stock": 161,
+      "inbound": 20,
+      "due_days": 4,
+      "unit_price": 320,
+      "order_no": "MO-2609-147"
+    },
+    {
+      "id": "MAT-2141",
+      "name": "光学传感单元",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "东莞工厂",
+      "supplier": "华芯精密",
+      "demand": 600,
+      "stock": 600,
+      "inbound": 0,
+      "due_days": 5,
+      "unit_price": 320,
+      "order_no": "MO-2609-148"
+    },
+    {
+      "id": "MAT-2142",
+      "name": "电源转换模块",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "武汉工厂",
+      "supplier": "远峰机电",
+      "demand": 240,
+      "stock": 240,
+      "inbound": 0,
+      "due_days": 6,
+      "unit_price": 48,
+      "order_no": "MO-2609-149"
+    },
+    {
+      "id": "MAT-2143",
+      "name": "耐压接插件",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "苏州工厂",
+      "supplier": "东立电子",
+      "demand": 160,
+      "stock": 108,
+      "inbound": 0,
+      "due_days": 7,
+      "unit_price": 780,
+      "order_no": "MO-2609-150"
+    },
+    {
+      "id": "MAT-2144",
+      "name": "铝合金壳体",
+      "owner": "许知远",
+      "owner_email": "xu.zhiyuan@example.com",
+      "site": "东莞工厂",
+      "supplier": "恒泰工业",
+      "demand": 160,
+      "stock": 85,
+      "inbound": 40,
+      "due_days": 8,
+      "unit_price": 48,
+      "order_no": "MO-2609-151"
+    },
+    {
+      "id": "MAT-2145",
+      "name": "高频滤波器",
+      "owner": "方雨",
+      "owner_email": "fang.yu@example.com",
+      "site": "武汉工厂",
+      "supplier": "华芯精密",
+      "demand": 160,
+      "stock": 118,
+      "inbound": 20,
+      "due_days": 9,
+      "unit_price": 780,
+      "order_no": "MO-2609-152"
+    },
+    {
+      "id": "MAT-2146",
+      "name": "控制线束总成",
+      "owner": "林晓",
+      "owner_email": "lin.xiao@example.com",
+      "site": "苏州工厂",
+      "supplier": "远峰机电",
+      "demand": 400,
+      "stock": 380,
+      "inbound": 20,
+      "due_days": 10,
+      "unit_price": 48,
+      "order_no": "MO-2609-153"
+    },
+    {
+      "id": "MAT-2147",
+      "name": "液压阀体",
+      "owner": "陈澈",
+      "owner_email": "chen.che@example.com",
+      "site": "东莞工厂",
+      "supplier": "东立电子",
+      "demand": 240,
+      "stock": 200,
+      "inbound": 40,
+      "due_days": 11,
+      "unit_price": 160,
+      "order_no": "MO-2609-154"
+    },
+    {
+      "id": "MAT-2148",
+      "name": "绝缘密封圈",
+      "owner": "周宁",
+      "owner_email": "zhou.ning@example.com",
+      "site": "武汉工厂",
+      "supplier": "恒泰工业",
+      "demand": 160,
+      "stock": 84,
+      "inbound": 20,
+      "due_days": 12,
+      "unit_price": 320,
+      "order_no": "MO-2609-155"
+    }
+  ],
+  "data_note": "内置合成演示数据，不代表真实企业业务。",
+  "agent_context": "围绕当前场景的数据和证据解释问题。使用平台动作草案，不声称已经发出通知。",
+  "columns": [
+    {
+      "key": "id",
+      "label": "物料 / 工单",
+      "format": "text"
+    },
+    {
+      "key": "name",
+      "label": "物料名称",
+      "format": "text"
+    },
+    {
+      "key": "owner",
+      "label": "责任人",
+      "format": "text"
+    },
+    {
+      "key": "demand",
+      "label": "需求",
+      "format": "number"
+    },
+    {
+      "key": "stock",
+      "label": "库存",
+      "format": "number"
+    },
+    {
+      "key": "shortage",
+      "label": "缺口",
+      "format": "number"
+    },
+    {
+      "key": "coverage",
+      "label": "齐套率",
+      "format": "percent"
+    },
+    {
+      "key": "due_days",
+      "label": "用料",
+      "format": "days"
+    }
+  ],
+  "impact_label": "缺口金额（演示估算）"
+}

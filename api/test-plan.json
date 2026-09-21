@@ -1,0 +1,750 @@
+{
+  "version": "1.0",
+  "default_mode": "isolated",
+  "note": "External effects require explicit live setup; skip is not pass.",
+  "operations": [
+    {
+      "operationId": "health",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "appInfo",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "listScenarios",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "listCapabilities",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "invokeCapability",
+      "effect": "conditional",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {
+        "scenario_id": "${scenario_id}",
+        "capability": "data.query"
+      },
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "getSettings",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "updateSettings",
+      "effect": "local-write",
+      "coverage": "fixture-or-explicit-live",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "testConnection",
+      "effect": "external-read",
+      "coverage": "fixture-or-explicit-live",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "listAgentTasks",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "submitAgentTask",
+      "effect": "external-write",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {
+        "scenario_id": "${scenario_id}",
+        "message": "只检查连接，不发送业务消息",
+        "request_id": "api-check"
+      },
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "listSessions",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "createSession",
+      "effect": "local-write",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "getAgentTask",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "agentEvents",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "cancelAgentTask",
+      "effect": "external-write",
+      "coverage": "fixture-or-explicit-live",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "replyAgentRequest",
+      "effect": "external-write",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "observeAgentTask",
+      "effect": "external-read",
+      "coverage": "fixture-or-explicit-live",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "continueAgentTask",
+      "effect": "external-write",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "sessionMessages",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "sessionSnapshot",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "listRemoteSessions",
+      "effect": "external-read",
+      "coverage": "fixture-or-explicit-live",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "bindRemoteSession",
+      "effect": "external-read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "invokeBridge",
+      "effect": "conditional",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "ingestData",
+      "effect": "conditional",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "ingestFeishuBatch",
+      "effect": "conditional",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {
+        "event_id": "feishu-job-20260920-0800",
+        "pulled_at": "2026-09-20T08:00:00+08:00",
+        "source": {
+          "provider": "feishu-cli",
+          "job_id": "scheduled-job-1"
+        },
+        "artifacts": [
+          {
+            "artifact_id": "image-001",
+            "kind": "image",
+            "relative_path": "data/integrations/feishu/materials/image-001.png",
+            "sha256": "${sha256}"
+          }
+        ]
+      },
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "listFeishuArtifacts",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "ragCapabilities",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "listRagCollections",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "createRagCollection",
+      "effect": "local-write",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "getRagCollection",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "listRagDocuments",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "registerRagDocument",
+      "effect": "local-write",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "getRagDocument",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "listRagChunks",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "createRagJob",
+      "effect": "local-write",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "listRagJobs",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "getRagJob",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "queryRagCollection",
+      "effect": "external-read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "getRagQuery",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "getRagCitations",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "previewRagChunks",
+      "effect": "local-write",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "fireTrigger",
+      "effect": "conditional",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "businessEvents",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "dashboard",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "records",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "scenarioConfig",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "cases",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "pullSource",
+      "effect": "conditional",
+      "coverage": "fixture-or-explicit-live",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "draftConfig",
+      "effect": "local-write",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "configRevisions",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "rollbackConfig",
+      "effect": "local-write",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "publishDraft",
+      "effect": "local-write",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "getDraft",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "caseDetail",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "updateCase",
+      "effect": "local-write",
+      "coverage": "fixture-or-explicit-live",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "executeAction",
+      "effect": "external-write",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "getAction",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "editAction",
+      "effect": "local-write",
+      "coverage": "fixture-or-explicit-live",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "replayRun",
+      "effect": "local-write",
+      "coverage": "fixture-or-explicit-live",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "getRun",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "capabilitySchema",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "apiCatalog",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "openapiSpec",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "dataWorkspace",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "dataVersions",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "dataTables",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "tableRows",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "rowLineage",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "rulesView",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "quickPrompt",
+      "effect": "read",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "snapshotNote",
+      "effect": "local-write",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    },
+    {
+      "operationId": "ingestDataBundle",
+      "effect": "conditional",
+      "coverage": "automatic-read-or-required-parameter-check",
+      "sample": {},
+      "expected_status": [
+        200
+      ],
+      "business_assertions": []
+    }
+  ],
+  "retired_operations": []
+}

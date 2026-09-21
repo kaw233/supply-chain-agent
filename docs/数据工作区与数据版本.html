@@ -1,0 +1,34 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>数据工作区、数据版本与规则追溯</title><style>body{background:#f4f6f8;color:#263540;margin:0;font:15px/1.85 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1120px;margin:25px auto;padding:32px 42px;background:white;border-top:4px solid #c75840}h1{font-size:30px;line-height:1.4}h2{font-size:22px;margin-top:32px;border-bottom:1px solid #e1e5e8;padding-bottom:8px}h3{font-size:17px}a{color:#ac4a34;overflow-wrap:anywhere}table{border-collapse:collapse;font-size:12px;width:100%;display:block;overflow:auto}td,th{border:1px solid #dce3e7;padding:9px;vertical-align:top;text-align:left}th{background:#f2f5f7}pre{background:#eff3f5;padding:16px;overflow:auto;max-height:560px}code{font:12px/1.7 Consolas,monospace;overflow-wrap:anywhere}blockquote{border-left:3px solid #d0937f;background:#fbf7f3;margin:18px 0;padding:10px 17px}nav{display:flex;flex-wrap:wrap;gap:15px;font-size:12px;border-bottom:1px solid #eee;padding-bottom:13px}footer{font-size:12px;color:#7b8891;border-top:1px solid #eee;margin-top:32px;padding-top:14px}img{max-width:100%}@media(max-width:700px){main{margin:0;padding:20px}h1{font-size:25px}}</style></head><body><main><h1>数据工作区、数据版本与规则追溯</h1>
+<h2>一个查询口径贯穿总览和明细</h2>
+<p>当前前端先解析具体snapshot_id，然后该轮指标、全表目录和行分页都携带这个ID。用户从高风险/正常/负责人统计下钻，明细带同样过滤条件。跨页或新数据到达不改变这次结果。切换快速连续触发时按请求代次检查，只有最后完整返回的一组summary/tables/rows进入画面。</p>
+<p>左侧仅保留业务场景；目标、数据、Case、动作、执行、规则和证据入口在右侧固定工作区，与Hermes助手共用外壳，但仍以当前场景和快照为范围。</p>
+<h2>全表可查看，不等于一次加载所有行</h2>
+<p><code>dw_tables</code> 登记各快照的原始表、处理阶段、映射/分类结果与Case投影；每张表保存字段并集，不因字段只出现在最后一行就丢列。行查询服务器游标分页，默认50，上限200；表格横向滚动显示全部已保存字段。内部 <code>_source_refs</code> 在追溯面板展示，不作为普通业务列刷屏。</p>
+<p>版本目录默认30条一页，按日期/时间范围和 <code>(data_at,seq)</code> 游标定位。真实SQLite索引 <code>dw_versions_date</code> 负责历史分页；不创建每版本一套实体表，不OFFSET扫描几千页，不打开选择器就读取所有历史数据。</p>
+<h2>不可变快照保存什么</h2>
+<p>每次成功运行保留完整来源表、已声明阶段、最终结果、当时实际规则配置、参数、源时间与逐行引用。相同内容SHA256寻址并zlib压缩；<code>dw_rows</code> 引用 <code>dw_blobs</code>，减少重复原文和记录。原 <code>runs</code> 只保留快照引用，不再重复一份完整JSON。</p>
+<p><code>WORKBENCH_DB</code> 是全部业务表、快照、历史注释和会话的存储位置，<code>.env.example</code> 可指定持久化磁盘；默认 <code>./data/workbench.sqlite3</code>。程序不自动删除历史数据，不把浏览器缓存当长期证据库。备份运行中的SQLite时应使用SQLite备份方式，或停服务再复制含WAL相关数据，不能只随手复制一部分文件。</p>
+<p>状态栏持续显示实际数据快照时间与规则摘要。快照 <code>data_at</code> 是该次计算所代表的时点；各输入表的 <code>source_times</code> 单独记录其提供的业务时间和采集时间，不冒充所有上游同一时刻更新。来源缺少时间则保留未知。输入更新失败显示上一次成功快照＋失败提示，不显示零风险或伪“已刷新”。</p>
+<p>最新模式跟随最新成功运行；历史模式固定不跳回，出现新数据只提示。快照URL、筛选和当前页面保留。历史复盘意见是现在追加的注释，不篡改当时记录。历史Case发起真实消息时先核对当前事实，不能以旧快照代替当前执行授权。</p>
+<h2>接入多表和保留中间表</h2>
+<p><code>POST /api/scenarios/&lt;id&gt;/data-bundle</code> 的示意输入如下。该接口接入已取得的数据，不会未经配置扫描宿主机全部数据库。</p>
+<pre><code class="language-json">{
+  &quot;main_table&quot;: &quot;orders&quot;,
+  &quot;mode&quot;: &quot;replace&quot;,
+  &quot;event_id&quot;: &quot;batch-20260911-1530&quot;,
+  &quot;tables&quot;: [
+    {&quot;id&quot;:&quot;orders&quot;,&quot;label&quot;:&quot;订单底表&quot;,&quot;data_at&quot;:&quot;2026-09-11T15:30:00+08:00&quot;,&quot;rows&quot;:[{&quot;id&quot;:&quot;A&quot;,&quot;name&quot;:&quot;示例订单&quot;}]},
+    {&quot;id&quot;:&quot;supplier&quot;,&quot;label&quot;:&quot;供应商底表&quot;,&quot;data_at&quot;:&quot;2026-09-11T14:00:00+08:00&quot;,&quot;rows&quot;:[{&quot;id&quot;:&quot;S1&quot;,&quot;name&quot;:&quot;示例供应商&quot;}]}
+  ]
+}
+</code></pre>
+<p>业务配置 <code>pipeline</code> 显式声明每步id、kind（identity/sql/python）、input、source。SQL可查询登记的输入表；Python使用 <code>transform(rows, parameters, tables)</code>，返回列表或 <code>{&quot;rows&quot;: [...], &quot;tables&quot;: {&quot;中间表名&quot;: [...]}}</code>。</p>
+<p>需要证明多表逐行关联时返回 <code>_source_refs: [{&quot;table&quot;:&quot;orders&quot;,&quot;key&quot;:&quot;A&quot;},{&quot;table&quot;:&quot;supplier&quot;,&quot;key&quot;:&quot;S1&quot;}]</code>。追溯沿已记录的引用逐级读取源行、步骤和规则命中，检测缺行/循环并限制单次展开深度和数量；不会依靠相同id推断任意Python/SQL只使用了某一条原数据。</p>
+<p>**未登记的数据源、未输出的Python临时变量、已丢弃的中间表不能事后凭空恢复。**画面明确提示table-level-only等缺失。旧版快照转换只展示当时真保存的内容，不伪造中间表。</p>
+<h2>原文规则与实际执行一致</h2>
+<p>规则页直接展示所选快照的source/触发/参数/pipeline或processor完整代码、字段映射、按顺序计算的derived、首个命中的分类rules、rule_sources原文和rule_coverage映射。长SQL/Python/原文可展开，不用进入“编辑”才知道如何计算。</p>
+<p><code>rule_sources</code> 和 <code>rule_coverage</code> 需包含实际提供的文件、章节、原文和实施映射。它们是可核验依据，不是系统自动证明所有正式规则语义已经正确。当前只有随包样例，没有用户完整正式规则文档，因此<strong>不能声明已验证未提供的那套业务规则</strong>。</p>
+<h2>Hermes行级解析与Case快捷操作</h2>
+<p>查看行 → 展示实际形成链路 → “请Hermes解析”或催办/指派/认领快捷入口 → 将当前快照、表、行、证据和意图填到右侧输入框。快捷点击不创建模型执行、更不直接发送邮件。用户提交后走原Hermes API/WebUI、工具批准和Skill回执逻辑。</p>
+<p>解析不是把全部数据源每次塞给模型；传当前行可核验链路及当时参数，必要时继续查指定表。没有引用的地方必须说明未知。历史操作标明当前状态需要核对；消息提交、送达、Case闭环分别处理。</p>
+<footer>供应链 Agent 工作台 2.2.0-rag；实际运行与未验证范围分别记录。</footer></main></body></html>

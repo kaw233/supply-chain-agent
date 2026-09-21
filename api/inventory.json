@@ -1,0 +1,1977 @@
+{
+  "contract_version": "1.0",
+  "operations": [
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "operationId": "health",
+      "summary": "运行与数据库状态",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/app",
+      "operationId": "appInfo",
+      "summary": "应用清单与默认场景",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/scenarios",
+      "operationId": "listScenarios",
+      "summary": "列出已安装业务场景",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/capabilities",
+      "operationId": "listCapabilities",
+      "summary": "当前场景可调用能力",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/capabilities/invoke",
+      "operationId": "invokeCapability",
+      "summary": "业务查询、检查、草稿或 Hermes Skill 委托",
+      "effect": "conditional",
+      "required": [
+        "scenario_id",
+        "capability"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "scenario_id": {},
+          "capability": {}
+        },
+        "required": [
+          "scenario_id",
+          "capability"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": true
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        ]
+      },
+      "example": {
+        "scenario_id": "${scenario_id}",
+        "capability": "data.query"
+      },
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings",
+      "operationId": "getSettings",
+      "summary": "读取脱敏连接和自动化设置",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/settings",
+      "operationId": "updateSettings",
+      "summary": "修改本实例设置",
+      "effect": "local-write",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "POST",
+      "path": "/api/connections/test",
+      "operationId": "testConnection",
+      "summary": "只读探测当前 Agent 运行时；不代表模型联调",
+      "effect": "external-read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/agent/tasks",
+      "operationId": "listAgentTasks",
+      "summary": "查看原任务，不启动执行",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/agent/tasks",
+      "operationId": "submitAgentTask",
+      "summary": "发起真实 Agent 任务",
+      "effect": "external-write",
+      "required": [
+        "scenario_id",
+        "message"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "scenario_id": {},
+          "message": {}
+        },
+        "required": [
+          "scenario_id",
+          "message"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {
+        "scenario_id": "${scenario_id}",
+        "message": "只检查连接，不发送业务消息",
+        "request_id": "api-check"
+      },
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/agent/sessions",
+      "operationId": "listSessions",
+      "summary": "当前业务会话",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/agent/sessions",
+      "operationId": "createSession",
+      "summary": "创建本地会话，不发送对话",
+      "effect": "local-write",
+      "required": [
+        "scenario_id"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "scenario_id": {}
+        },
+        "required": [
+          "scenario_id"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/agent/tasks/{task_id}",
+      "operationId": "getAgentTask",
+      "summary": "查询一次执行的当前事实",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/agent/tasks/{task_id}/events",
+      "operationId": "agentEvents",
+      "summary": "按游标读取已记录工具事件",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": true
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        ]
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/agent/tasks/{task_id}/cancel",
+      "operationId": "cancelAgentTask",
+      "summary": "只停止对应 Agent 执行，数据计算继续",
+      "effect": "external-write",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "POST",
+      "path": "/api/agent/tasks/{task_id}/reply",
+      "operationId": "replyAgentRequest",
+      "summary": "回复匹配的批准或补充信息请求",
+      "effect": "external-write",
+      "required": [
+        "card_key"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "card_key": {}
+        },
+        "required": [
+          "card_key"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "POST",
+      "path": "/api/agent/tasks/{task_id}/observe",
+      "operationId": "observeAgentTask",
+      "summary": "重新核对原远端任务，不重发",
+      "effect": "external-read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "POST",
+      "path": "/api/agent/tasks/{task_id}/continue",
+      "operationId": "continueAgentTask",
+      "summary": "用户明确发起后续步骤",
+      "effect": "external-write",
+      "required": [
+        "confirm",
+        "message"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "confirm": {},
+          "message": {}
+        },
+        "required": [
+          "confirm",
+          "message"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/agent/sessions/{session_id}/messages",
+      "operationId": "sessionMessages",
+      "summary": "查询会话消息",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/agent/sessions/{session_id}/snapshot",
+      "operationId": "sessionSnapshot",
+      "summary": "会话与任务一致性快照",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/hermes/sessions",
+      "operationId": "listRemoteSessions",
+      "summary": "列出 WebUI 远端会话",
+      "effect": "external-read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": true
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        ]
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "POST",
+      "path": "/api/hermes/bind",
+      "operationId": "bindRemoteSession",
+      "summary": "绑定已存在远端会话",
+      "effect": "external-read",
+      "required": [
+        "scenario_id",
+        "remote_session_id"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "scenario_id": {},
+          "remote_session_id": {}
+        },
+        "required": [
+          "scenario_id",
+          "remote_session_id"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "POST",
+      "path": "/api/bridge/{task_id}",
+      "operationId": "invokeBridge",
+      "summary": "任务范围内的工作台桥接；见 x-bridge-operations",
+      "effect": "conditional",
+      "required": [
+        "operation"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {}
+        },
+        "required": [
+          "operation"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": true
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        ]
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "POST",
+      "path": "/api/data/ingest",
+      "operationId": "ingestData",
+      "summary": "写入业务输入并触发计算；自动任务视设置",
+      "effect": "conditional",
+      "required": [
+        "scenario_id",
+        "records"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "scenario_id": {
+            "type": "string"
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "upsert",
+              "replace"
+            ]
+          },
+          "event_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario_id",
+          "records"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "POST",
+      "path": "/api/integrations/feishu/{scenario_id}/batches",
+      "operationId": "ingestFeishuBatch",
+      "summary": "接收定时飞书 CLI 产物清单；不调用飞书 API",
+      "effect": "conditional",
+      "required": [
+        "event_id",
+        "pulled_at",
+        "artifacts"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string"
+          },
+          "pulled_at": {
+            "type": "string"
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "upsert",
+              "replace"
+            ]
+          }
+        },
+        "required": [
+          "event_id",
+          "pulled_at",
+          "artifacts"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {
+        "event_id": "feishu-job-20260920-0800",
+        "pulled_at": "2026-09-20T08:00:00+08:00",
+        "source": {
+          "provider": "feishu-cli",
+          "job_id": "scheduled-job-1"
+        },
+        "artifacts": [
+          {
+            "artifact_id": "image-001",
+            "kind": "image",
+            "relative_path": "data/integrations/feishu/materials/image-001.png",
+            "sha256": "${sha256}"
+          }
+        ]
+      },
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/integrations/feishu/{scenario_id}/artifacts",
+      "operationId": "listFeishuArtifacts",
+      "summary": "查看已接收的定时飞书产物清单",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/rag/capabilities",
+      "operationId": "ragCapabilities",
+      "summary": "RAG 适配器能力与联调状态",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/rag/collections",
+      "operationId": "listRagCollections",
+      "summary": "列出 RAG Collection",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/rag/collections",
+      "operationId": "createRagCollection",
+      "summary": "创建 RAG Collection 配置",
+      "effect": "local-write",
+      "required": [
+        "scenario_id",
+        "id",
+        "name"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "scenario_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "embedding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "vector_store": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "reranker": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "chunking": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "scenario_id",
+          "id",
+          "name"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/rag/collections/{collection_id}",
+      "operationId": "getRagCollection",
+      "summary": "读取 RAG Collection",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/rag/collections/{collection_id}/documents",
+      "operationId": "listRagDocuments",
+      "summary": "列出 RAG 文档元数据",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/rag/collections/{collection_id}/documents",
+      "operationId": "registerRagDocument",
+      "summary": "登记 RAG 文档元数据",
+      "effect": "local-write",
+      "required": [
+        "external_id"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "external_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "source_type": {
+            "type": "string"
+          },
+          "source_ref": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "checksum": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "external_id"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/rag/documents/{document_id}",
+      "operationId": "getRagDocument",
+      "summary": "读取 RAG 文档元数据",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/rag/documents/{document_id}/chunks",
+      "operationId": "listRagChunks",
+      "summary": "列出已建立索引的 RAG Chunk；框架阶段为空",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/rag/collections/{collection_id}/jobs",
+      "operationId": "createRagJob",
+      "summary": "创建 RAG 计划任务；当前不执行采集或索引",
+      "effect": "local-write",
+      "required": [
+        "kind"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "ingest",
+              "embed",
+              "index",
+              "rebuild"
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "plan"
+            ]
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "options": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/rag/collections/{collection_id}/jobs",
+      "operationId": "listRagJobs",
+      "summary": "列出 RAG 计划任务",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/rag/jobs/{job_id}",
+      "operationId": "getRagJob",
+      "summary": "读取 RAG 任务",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/rag/collections/{collection_id}/query",
+      "operationId": "queryRagCollection",
+      "summary": "执行 RAG 查询；未配置时不返回虚假召回",
+      "effect": "external-read",
+      "required": [
+        "query"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "top_k": {
+            "type": "integer"
+          },
+          "filters": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "rerank": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/rag/queries/{query_id}",
+      "operationId": "getRagQuery",
+      "summary": "读取 RAG 查询审计结果",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/rag/queries/{query_id}/citations",
+      "operationId": "getRagCitations",
+      "summary": "读取 RAG 查询引用证据",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/rag/documents/{document_id}/chunk-plan",
+      "operationId": "previewRagChunks",
+      "summary": "预览确定性文本分块；不采集、不持久化",
+      "effect": "local-write",
+      "required": [
+        "text"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "chunk_size": {
+            "type": "integer"
+          },
+          "overlap": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "POST",
+      "path": "/api/triggers/fire",
+      "operationId": "fireTrigger",
+      "summary": "统一数据、按钮和对话检查入口",
+      "effect": "conditional",
+      "required": [
+        "scenario_id"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "scenario_id": {}
+        },
+        "required": [
+          "scenario_id"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/events",
+      "operationId": "businessEvents",
+      "summary": "业务事件游标",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": true
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        ]
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/scenarios/{scenario_id}/dashboard",
+      "operationId": "dashboard",
+      "summary": "指标、图表和当前业务投影",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/scenarios/{scenario_id}/records",
+      "operationId": "records",
+      "summary": "明细或原始记录",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": true
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        ]
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/scenarios/{scenario_id}/config",
+      "operationId": "scenarioConfig",
+      "summary": "业务定义、处理规则与样例",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/scenarios/{scenario_id}/cases",
+      "operationId": "cases",
+      "summary": "当前问题列表",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/scenarios/{scenario_id}/pull",
+      "operationId": "pullSource",
+      "summary": "读取配置的数据源并计算",
+      "effect": "conditional",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "POST",
+      "path": "/api/scenarios/{scenario_id}/drafts",
+      "operationId": "draftConfig",
+      "summary": "试算配置并生成差异草稿",
+      "effect": "local-write",
+      "required": [
+        "config"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "config": {}
+        },
+        "required": [
+          "config"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/scenarios/{scenario_id}/revisions",
+      "operationId": "configRevisions",
+      "summary": "配置版本历史",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/scenarios/{scenario_id}/rollback",
+      "operationId": "rollbackConfig",
+      "summary": "显式回滚配置，不撤销现实动作",
+      "effect": "local-write",
+      "required": [
+        "confirm",
+        "version"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "confirm": {},
+          "version": {}
+        },
+        "required": [
+          "confirm",
+          "version"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "POST",
+      "path": "/api/drafts/{draft_id}/publish",
+      "operationId": "publishDraft",
+      "summary": "校验后应用业务配置",
+      "effect": "local-write",
+      "required": [
+        "confirm"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "confirm": {}
+        },
+        "required": [
+          "confirm"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/drafts/{draft_id}",
+      "operationId": "getDraft",
+      "summary": "查看固定草稿",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cases/{case_id}",
+      "operationId": "caseDetail",
+      "summary": "问题详情、依据和反馈",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/cases/{case_id}",
+      "operationId": "updateCase",
+      "summary": "登记反馈或验收；不以消息发送替代关闭",
+      "effect": "local-write",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "POST",
+      "path": "/api/actions/{action_id}/execute",
+      "operationId": "executeAction",
+      "summary": "确认后将动作交给 Hermes Skill",
+      "effect": "external-write",
+      "required": [
+        "confirm",
+        "draft_revision"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "confirm": {},
+          "draft_revision": {}
+        },
+        "required": [
+          "confirm",
+          "draft_revision"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/actions/{action_id}",
+      "operationId": "getAction",
+      "summary": "读取草稿、执行和分项回执",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/actions/{action_id}",
+      "operationId": "editAction",
+      "summary": "修改草案，旧确认不覆盖新内容",
+      "effect": "local-write",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "POST",
+      "path": "/api/runs/{run_id}/replay",
+      "operationId": "replayRun",
+      "summary": "只读重新计算旧快照，不重复执行动作",
+      "effect": "local-write",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "GET",
+      "path": "/api/runs/{run_id}",
+      "operationId": "getRun",
+      "summary": "输入、规则、参数和结果快照",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/schema",
+      "operationId": "capabilitySchema",
+      "summary": "业务接口和桥接目录",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/catalog",
+      "operationId": "apiCatalog",
+      "summary": "全部已注册 HTTP 操作及效果分类",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/openapi.json",
+      "operationId": "openapiSpec",
+      "summary": "与运行路由同源的 OpenAPI 3.1",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/scenarios/{scenario_id}/workspace",
+      "operationId": "dataWorkspace",
+      "summary": "固定时点的目标与筛选口径",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {},
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/scenarios/{scenario_id}/versions",
+      "operationId": "dataVersions",
+      "summary": "按时间分页列出真实数据版本",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {},
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/scenarios/{scenario_id}/tables",
+      "operationId": "dataTables",
+      "summary": "列出该快照全部原始表、中间表、结果表",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {},
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/scenarios/{scenario_id}/tables/{table_id}/rows",
+      "operationId": "tableRows",
+      "summary": "固定快照与过滤，游标分页读取记录",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {},
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/scenarios/{scenario_id}/tables/{table_id}/lineage/{row_key}",
+      "operationId": "rowLineage",
+      "summary": "结构化形成链路与当时规则",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {},
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/scenarios/{scenario_id}/rules-view",
+      "operationId": "rulesView",
+      "summary": "实际执行的规则、参数、处理代码及原文依据",
+      "effect": "read",
+      "required": [],
+      "request_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "response_schema": {},
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/scenarios/{scenario_id}/quick-prompt",
+      "operationId": "quickPrompt",
+      "summary": "准备带当前快照和对象的 Hermes 提示词；不执行",
+      "effect": "read",
+      "required": [
+        "key"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "key": {}
+        },
+        "required": [
+          "key"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {},
+      "example": {},
+      "live_test_default": "read-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/scenarios/{scenario_id}/snapshot-notes",
+      "operationId": "snapshotNote",
+      "summary": "在历史快照上追加复盘意见，不改历史数据",
+      "effect": "local-write",
+      "required": [
+        "snapshot",
+        "note"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "snapshot": {},
+          "note": {}
+        },
+        "required": [
+          "snapshot",
+          "note"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {},
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    },
+    {
+      "method": "POST",
+      "path": "/api/scenarios/{scenario_id}/data-bundle",
+      "operationId": "ingestDataBundle",
+      "summary": "批次接入多张来源表并运行处理",
+      "effect": "conditional",
+      "required": [
+        "tables"
+      ],
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "tables": {}
+        },
+        "required": [
+          "tables"
+        ],
+        "additionalProperties": true
+      },
+      "response_schema": {},
+      "example": {},
+      "live_test_default": "explicit-opt-in"
+    }
+  ],
+  "bridge_operations": {
+    "describe": {
+      "parameters": {},
+      "effect": "read",
+      "description": "此目录；普通聊天不要求 JSON"
+    },
+    "data.query": {
+      "parameters": {
+        "filters": "可选 severity/owner/site/q",
+        "limit": "最多2000"
+      },
+      "effect": "read"
+    },
+    "data.raw": {
+      "parameters": {},
+      "effect": "read"
+    },
+    "data.ingest": {
+      "parameters": {
+        "records": "记录数组",
+        "mode": "upsert/replace",
+        "event_id": "来源事件编号"
+      },
+      "effect": "business_write"
+    },
+    "data.pull": {
+      "parameters": {},
+      "effect": "business_write",
+      "description": "读取已配置 file/url 数据源并计算"
+    },
+    "rules.run": {
+      "parameters": {
+        "parameters": "已声明数字参数，可选"
+      },
+      "effect": "compute"
+    },
+    "case.get": {
+      "parameters": {
+        "case_id": "明确的 Case 编号"
+      },
+      "effect": "read"
+    },
+    "case.feedback": {
+      "parameters": {
+        "case_id": "编号",
+        "note": "反馈正文",
+        "source": "来源",
+        "status": "可选"
+      },
+      "effect": "business_write"
+    },
+    "view": {
+      "parameters": {
+        "type": "set_filter/navigate/open_case",
+        "filters": "筛选对象",
+        "page": "页面",
+        "case_id": "Case编号"
+      },
+      "effect": "view_only"
+    },
+    "action.prepare": {
+      "parameters": {
+        "capability": "当前业务 actions 中的能力标识",
+        "case_ids": "明确选中的 Case 数组"
+      },
+      "effect": "draft",
+      "description": "只生成工作台业务确认草稿，不发送"
+    },
+    "action.receipt": {
+      "parameters": {
+        "action_id": "已确认动作",
+        "message_id": "消息编号",
+        "status": "submitted/failed/unknown",
+        "provider_ref": "实际外部编号",
+        "evidence": "工具回执文本或来源"
+      },
+      "effect": "business_write",
+      "description": "记录报告的回执；不声称独立核验外部投递"
+    },
+    "processing.get": {
+      "parameters": {},
+      "effect": "read",
+      "description": "当前配置、参数、映射、派生公式和 SQL/Python 处理代码"
+    },
+    "processing.preview": {
+      "parameters": {
+        "config": "完整当前配置及你的差异"
+      },
+      "effect": "draft",
+      "description": "保留验收样例，预览和试算不覆盖当前配置"
+    },
+    "processing.apply": {
+      "parameters": {
+        "draft_id": "试算草稿编号",
+        "authorized": "用户明确要求修改并生效时 true"
+      },
+      "effect": "business_write"
+    },
+    "workspace.tables": {
+      "parameters": {
+        "snapshot": "可选，默认本任务快照"
+      },
+      "effect": "read"
+    },
+    "workspace.rows": {
+      "parameters": {
+        "table": "表名",
+        "snapshot": "快照",
+        "cursor": "分页游标",
+        "limit": "每页最多200"
+      },
+      "effect": "read"
+    },
+    "workspace.lineage": {
+      "parameters": {
+        "table": "表名",
+        "key": "行key",
+        "snapshot": "快照"
+      },
+      "effect": "read"
+    },
+    "rag.describe": {
+      "parameters": {},
+      "effect": "read",
+      "description": "RAG 接口、适配器和联调状态"
+    },
+    "rag.search": {
+      "parameters": {
+        "collection_id": "RAG Collection 编号",
+        "query": "检索问题",
+        "top_k": "最多50",
+        "filters": "可选过滤器"
+      },
+      "effect": "read",
+      "description": "只读 RAG 检索；未配置时不返回虚假召回"
+    },
+    "rag.citation": {
+      "parameters": {
+        "query_id": "RAG 查询编号",
+        "chunk_id": "可选 chunk 编号"
+      },
+      "effect": "read",
+      "description": "读取已持久化的 RAG 引用证据"
+    },
+    "report": {
+      "parameters": {
+        "filters": "可选"
+      },
+      "effect": "read"
+    }
+  }
+}

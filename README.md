@@ -1,4 +1,4 @@
-# 供应链 Agent 工作台 v2.2.0-rag · Apache-2.0 开源版
+# 供应链 Agent 工作台 v2.2.1-rag · Apache-2.0 开源版
 
 > 本项目采用 [Apache License 2.0](LICENSE) 开源。当前实现边界、第三方组件和发布验证见 [`OPEN_SOURCE_RELEASE.md`](OPEN_SOURCE_RELEASE.md) 与 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。
 
@@ -34,7 +34,7 @@ python verify.py
 
 ## 安全与贡献
 
-本仓库只包含合成业务样例，不应提交企业数据、模型密钥、飞书凭据、运行数据库或日志。DSH 的 `workspace-write` 不是操作系统沙箱，生产部署必须使用专用账户、最小文件权限和独立密钥。
+本仓库只包含不可关联的全合成业务样例：人员使用角色编号、邮箱使用保留域 `.invalid`、组织与编号均带“示例/合成/DEMO”标识。具体处理规则见 [`docs/数据脱敏说明.md`](docs/数据脱敏说明.md)。不应提交企业数据、模型密钥、飞书凭据、运行数据库或日志。DSH 的 `workspace-write` 不是操作系统沙箱，生产部署必须使用专用账户、最小文件权限和独立密钥。
 
 提交变更前请阅读 [`CONTRIBUTING.md`](CONTRIBUTING.md) 和 [`SECURITY.md`](SECURITY.md)，并运行 `python verify.py`。第三方组件及许可见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。
 

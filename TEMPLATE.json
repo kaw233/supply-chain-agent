@@ -1,6 +1,6 @@
 {
   "id": "business-v1.2",
-  "version": "2.2.0-rag",
+  "version": "2.2.1-rag",
   "generator_version": "0.9.0",
   "description": "Apache-2.0 供应链 Agent 工作台；包含合成场景、可选 DSH/Hermes 运行时、Mock ERP MCP、定时飞书产物合同和 RAG 接口框架。",
   "entry": "server.py",

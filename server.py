@@ -29,7 +29,7 @@ if _env_file.exists():
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version='SupplyChainAgentWorkbench/2.2.0-rag'
+    server_version='SupplyChainAgentWorkbench/2.2.1-rag'
     def log_message(self,fmt,*args):
         if '/api/agent/' not in str(args) and '/api/events' not in str(args): super().log_message(fmt,*args)
     def send(self,data,status=200,ctype='application/json; charset=utf-8',filename=None):

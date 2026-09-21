@@ -26,5 +26,7 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Run isolated HTTP checks
         run: python scripts/test_api.py --isolated --report reports/api-report.json
+      - name: Audit synthetic scenario data
+        run: python scripts/data_privacy_audit.py
       - name: Run release audit
         run: python scripts/release_audit.py

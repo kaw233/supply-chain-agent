@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Supply Chain Agent Workbench API",
-    "version": "2.2.0-rag"
+    "version": "2.2.1-rag"
   },
   "paths": {
     "/api/health": {

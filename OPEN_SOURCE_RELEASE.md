@@ -10,6 +10,7 @@
 ## 已完成的工程准备
 
 - [x] 使用合成的物料、交期和质量样例，不包含已知企业生产数据。
+- [x] 演示人员、邮箱、工厂、供应商和业务编号均已改为不可关联占位值，并加入 CI 脱敏审计。
 - [x] DSH 保持可选依赖；无 DSH 时基础工作台仍可运行。
 - [x] RAG 明确为 `contract-only`，未配置时不生成虚假召回或引用。
 - [x] 运行数据库、DSH Profile、飞书接收产物、日志和测试报告已加入忽略规则。
@@ -21,7 +22,7 @@
 ## 首次公开发布流程
 
 1. 保存与上游权利相关的内部授权记录。
-2. 运行 `python scripts/release_audit.py`，要求结果为 PASS。
+2. 运行 `python scripts/data_privacy_audit.py` 和 `python scripts/release_audit.py`，要求结果为 PASS。
 3. 运行 `python verify.py` 以及 `python scripts/test_api.py --isolated`。
 4. 使用专用 Secret Scanner 检查完整 Git 历史和待发布内容。
 5. 建立首次可审阅提交；确认 `git status --ignored` 中的运行数据均未被跟踪。

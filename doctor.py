@@ -17,6 +17,6 @@ def main():
  except importlib.metadata.PackageNotFoundError:sdk=None
  dsh_files=all((ROOT/'dsh_runtime'/name).is_file() for name in ('worker.py','bridge.mjs','profile.patch.yml'))
  checks.append({'name':'optional local DSH SDK','status':'PASS' if sdk and shutil.which('node') and dsh_files else 'SKIP','detail':{'sdk_version':sdk,'node':shutil.which('node'),'runtime_files':dsh_files,'install':'python -m pip install -r requirements-dsh.txt'}})
- report={'ok':all(c['status']!='FAIL' for c in checks),'checks':checks,'model_required_for_this_check':False,'live_DSH_verified':False,'live_Hermes_verified':False,'live_RAG_verified':False,'version':'2.2.0-rag'}
+ report={'ok':all(c['status']!='FAIL' for c in checks),'checks':checks,'model_required_for_this_check':False,'live_DSH_verified':False,'live_Hermes_verified':False,'live_RAG_verified':False,'version':'2.2.1-rag'}
  print(json.dumps(report,ensure_ascii=False,indent=2));return 0 if report['ok'] else 1
 if __name__=='__main__':sys.exit(main())

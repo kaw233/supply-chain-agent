@@ -23,6 +23,7 @@ macOS/Linux 请将解释器路径替换为 `./.venv/bin/python`。
 - 外部操作缺少真实环境时应标记为 SKIP 或未验证，不能用模拟回执宣称联调成功。
 - RAG 未配置真实 Provider 时必须返回 `not_configured`，不能制造 Hit、分数或 Citation。
 - 新增第三方代码或依赖时，必须同步更新 `THIRD_PARTY_NOTICES.md` 并确认许可证兼容。
+- 修改 `examples/` 或 `packs/` 时，只能使用不可关联的全合成数据，并通过 `scripts/data_privacy_audit.py`。
 
 ## 验证
 
@@ -31,6 +32,7 @@ macOS/Linux 请将解释器路径替换为 `./.venv/bin/python`。
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 .\.venv\Scripts\python.exe scripts\test_api.py --isolated
 .\.venv\Scripts\python.exe verify.py
+.\.venv\Scripts\python.exe scripts\data_privacy_audit.py
 .\.venv\Scripts\python.exe scripts\release_audit.py
 ```
 

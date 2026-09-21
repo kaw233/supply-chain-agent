@@ -39,4 +39,4 @@ python scripts/test_api.py --base http://127.0.0.1:8765 --report reports/read-on
 <p>新数据工作区的查询必须保持同一 <code>snapshot</code>。版本查询支持from/to/cursor/limit；行查询支持snapshot/table/cursor/limit、severity/owner/site/rule_id/risk和行键q。快捷提示POST不发外部动作；snapshot-notes仅追加复盘。</p>
 <p>批量报告区分正例成功、参数负例、SKIP 和 FAIL。某接口正确返回 404/400 只证明拒绝路径，不当作业务成功。当前隔离检查结果以本次生成的 <code>reports/api-report.json</code> 为准；目前登记 72 个操作。缺真实 Hermes 执行号、凭据或生产外部动作的接口明确跳过，不补造回执。</p>
 <p>可运行预览不等于“已验收交付”；发布前仍要通过本地关键检查。独立发布包必须在全新虚拟环境安装声明依赖并复验，不能用开发机环境掩盖漏依赖。HTTP 200 不证明全部业务规则正确。</p>
-<footer>供应链 Agent 工作台 2.2.0-rag；实际运行与未验证范围分别记录。</footer></main></body></html>
+<footer>供应链 Agent 工作台 2.2.1-rag；实际运行与未验证范围分别记录。</footer></main></body></html>

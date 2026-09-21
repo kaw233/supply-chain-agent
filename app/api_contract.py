@@ -55,11 +55,11 @@ def scenario(c):
     raise DomainError('存在多个场景，请传 scenario_id；不会默认 materials',400)
 
 @route('GET','/api/health','health','运行与数据库状态',response=OBJECT)
-def health(c):return {'ok':True,'version':'2.2.0-rag','runtime':'Python + SQLite + optional local DSH SDK + RAG contracts','database':c.rt.store.path.name}
+def health(c):return {'ok':True,'version':'2.2.1-rag','runtime':'Python + SQLite + optional local DSH SDK + RAG contracts','database':c.rt.store.path.name}
 @route('GET','/api/app','appInfo','应用清单与默认场景',response=OBJECT)
 def app_info(c):
     rows=c.rt.list_scenarios()
-    return {'product':'supply-chain-agent-community','maker_enabled':False,'runtime_version':'2.2.0-rag','bridge_base':c.rt.base_url,
+    return {'product':'supply-chain-agent-community','maker_enabled':False,'runtime_version':'2.2.1-rag','bridge_base':c.rt.base_url,
             'instance_id':getattr(c.rt,'instance_id','business'),'default_scenario':rows[0]['id'] if rows else None}
 @route('GET','/api/scenarios','listScenarios','列出已安装业务场景',response={'type':'array','items':OBJECT})
 def scenes(c):return c.rt.list_scenarios()
@@ -267,5 +267,5 @@ def openapi():
         else:op['requestBody']={'required':bool(r.required),'content':{'application/json':{'schema':r.body_schema(),'example':r.example or {}}}}
         if r.operation_id=='invokeBridge':op['x-bridge-operations']=bridge.CATALOG
         paths.setdefault(r.path,{})[r.method.lower()]=op
-    return {'openapi':'3.1.0','info':{'title':'Supply Chain Agent Workbench API','version':'2.2.0-rag'},'paths':paths,
+    return {'openapi':'3.1.0','info':{'title':'Supply Chain Agent Workbench API','version':'2.2.1-rag'},'paths':paths,
             'x-note':'目录完整性不等于业务正确性。外部写入测试需明确授权。默认批量测试使用隔离库。'}
